@@ -212,11 +212,7 @@ const contactFields = `<div class="form-row">${field('Contact person', 'Contact 
     body: `<section class="hero"><div class="wrap">
 <div class="rv"><p class="eyebrow">${site.brand} · Phnom Penh</p><h1 class="display" data-cms="hero.title">Crafting the <em>future</em> of apparel.</h1><p class="lead" data-cms="hero.subtitle">${site.tagline}</p>
 <div class="actions"><a class="btn btn--light" href="/collections/">Explore Collections</a><a class="btn btn--outline-light" href="/custom-design/">Start Your Custom Order</a></div></div>
-<div class="hero-art rv" aria-hidden="true"><div class="plate"></div>
-<img class="t2" src="${img(heroP[1], 'black', 'front')}" alt="" width="400" height="440" fetchpriority="high">
-<img class="t1" src="${img(heroP[0], 'bone', 'front')}" alt="" width="400" height="440" fetchpriority="high">
-<img class="t3" src="${img(heroP[2], 'sand', 'front')}" alt="" width="400" height="440">
-<span class="tag a">Heavyweight · 280 GSM</span><span class="tag b">Private label ready</span></div>
+<div class="hero-art hero-art--models rv" aria-label="SIDDIQIYA premium menswear campaign models" style="display:block;position:relative;overflow:hidden;aspect-ratio:1.35/1;border-radius:3px"><img src="/assets/img/siddiqiya-hero-models.jpg" alt="Three confident fashion models showcasing SIDDIQIYA oversized premium T-shirts in cream, black and olive" width="720" height="550" fetchpriority="high" style="display:block;width:100%;height:100%;object-fit:cover;object-position:center"></div>
 </div><div class="hero-meta"><span>T-Shirts · Private Label · OEM / ODM</span><span>Phnom Penh — Worldwide</span></div></section>
 
 <section class="section"><div class="wrap">${head('Collections', 'Six collections, one standard.', 'Each collection is built on bodies we can produce at scale and finish under your label.', `<a class="link" href="/collections/">All collections ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
