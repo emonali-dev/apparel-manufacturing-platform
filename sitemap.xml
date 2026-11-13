@@ -7,6 +7,7 @@
 <url><loc>https://app.hsdmj.com/collections/streetwear/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/collections/premium-cotton/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/collections/graphic/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/collections/polo/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/collections/sportswear/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/products/</loc><priority>0.9</priority></url>
 <url><loc>https://app.hsdmj.com/categories/basic-t-shirts/</loc><priority>0.7</priority></url>
@@ -55,6 +56,8 @@
 <url><loc>https://app.hsdmj.com/fabrics/polyester-dry-fit/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/fabrics/modal-blend/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/fabrics/heavyweight-cotton/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/fabrics/fleece/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/fabrics/rib/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/custom-design/</loc><priority>0.9</priority></url>
 <url><loc>https://app.hsdmj.com/manufacturing/</loc><priority>0.9</priority></url>
 <url><loc>https://app.hsdmj.com/manufacturing/custom-neck-labels/</loc><priority>0.7</priority></url>
@@ -76,6 +79,11 @@
 <url><loc>https://app.hsdmj.com/search/</loc><priority>0.3</priority></url>
 <url><loc>https://app.hsdmj.com/about/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/contact/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/how-it-works/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/quality-control/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/printing-embroidery/</loc><priority>0.7</priority></url>
+<url><loc>https://app.hsdmj.com/shipping-policy/</loc><priority>0.2</priority></url>
+<url><loc>https://app.hsdmj.com/refund-policy/</loc><priority>0.2</priority></url>
 <url><loc>https://app.hsdmj.com/size-guide/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/shipping/</loc><priority>0.7</priority></url>
 <url><loc>https://app.hsdmj.com/faq/</loc><priority>0.7</priority></url>

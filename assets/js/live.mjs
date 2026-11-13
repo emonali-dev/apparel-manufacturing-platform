@@ -9,6 +9,10 @@ const KEY = 'sa_catalog';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const svgUrl = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 const known = new Set(SA.products.map((p) => p.id));
+// Fabrics/collections that exist in the database catalog. Items added to the site later
+// (e.g. Fleece, Rib, Polo) stay visible until they are added to the database too.
+const DB_FABRICS = new Set(['100-cotton', 'combed-cotton', 'organic-cotton', 'cotton-polyester', 'french-terry', 'pique', 'polyester-dry-fit', 'modal-blend', 'heavyweight-cotton']);
+const DB_COLLECTIONS = new Set(['essential', 'oversized', 'streetwear', 'premium-cotton', 'graphic', 'sportswear']);
 
 async function catalog() {
   try {
@@ -53,11 +57,11 @@ async function run() {
   });
   document.querySelectorAll('a.fab[href^="/fabrics/"], a.swatch-tile[href^="/fabrics/"]').forEach((a) => {
     const slug = a.getAttribute('href').split('/')[2];
-    if (slug && !liveFabrics.has(slug)) a.remove();
+    if (slug && DB_FABRICS.has(slug) && !liveFabrics.has(slug)) a.remove();
   });
   document.querySelectorAll('a.coll[href^="/collections/"]').forEach((a) => {
     const slug = a.getAttribute('href').split('/')[2];
-    if (slug && !liveCollections.has(slug)) a.remove();
+    if (slug && DB_COLLECTIONS.has(slug) && !liveCollections.has(slug)) a.remove();
   });
 
   // Product page: unpublished → notice; MOQ / lead time from admin.

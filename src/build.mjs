@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { site, colors, fabrics, categories, collections, products, services, productionSteps, gsmOptions } from './data.mjs';
+import { site, colors, fabrics, categories, collections, products, services, productionSteps, gsmOptions, howItWorks } from './data.mjs';
 import { teeSVG, teeSideSVG, fabricSVG } from './art.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -20,7 +20,7 @@ const fabBy = Object.fromEntries(fabrics.map((f) => [f.slug, f]));
 const shapeOf = (p) => catBy[p.cat].shape;
 
 // Clean previous output
-for (const d of ['account', 'admin', 'products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping', 'assets/img']) {
+for (const d of ['how-it-works', 'quality-control', 'printing-embroidery', 'shipping-policy', 'refund-policy', 'account', 'admin', 'products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping', 'assets/img']) {
   fs.rmSync(path.join(ROOT, d), { recursive: true, force: true });
 }
 
@@ -122,11 +122,11 @@ function footer() {
 <div class="socials"><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp">${I.wa}</a><a href="https://www.facebook.com/siddiqiyatechnology" target="_blank" rel="noopener" aria-label="Facebook">${I.fb}</a></div>
 </div>
 <div><h4>Products</h4><ul>${categories.slice(0, 7).map((c) => `<li><a href="/categories/${c.slug}/">${c.name}</a></li>`).join('')}<li><a href="/products/">All products</a></li></ul></div>
-<div><h4>Manufacturing</h4><ul><li><a href="/manufacturing/oem-manufacturing/">OEM Manufacturing</a></li><li><a href="/manufacturing/odm-manufacturing/">ODM Manufacturing</a></li><li><a href="/manufacturing/private-label-production/">Private Label</a></li><li><a href="/manufacturing/screen-printing/">Screen Printing</a></li><li><a href="/manufacturing/logo-embroidery/">Embroidery</a></li><li><a href="/custom-design/">Custom Design Studio</a></li><li><a href="/manufacturing/">All services</a></li></ul></div>
-<div><h4>Buyer resources</h4><ul><li><a href="/wholesale/">Wholesale programme</a></li><li><a href="/fabrics/">Fabric library</a></li><li><a href="/size-guide/">Size guide</a></li><li><a href="/shipping/">Shipping &amp; export</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/quote/">Request a quote</a></li></ul></div>
+<div><h4>Manufacturing</h4><ul><li><a href="/manufacturing/oem-manufacturing/">OEM Manufacturing</a></li><li><a href="/manufacturing/odm-manufacturing/">ODM Manufacturing</a></li><li><a href="/manufacturing/private-label-production/">Private Label</a></li><li><a href="/manufacturing/screen-printing/">Screen Printing</a></li><li><a href="/printing-embroidery/">Printing &amp; embroidery</a></li><li><a href="/custom-design/">Custom Design Studio</a></li><li><a href="/manufacturing/">All services</a></li></ul></div>
+<div><h4>Buyer resources</h4><ul><li><a href="/wholesale/">Wholesale programme</a></li><li><a href="/fabrics/">Fabric library</a></li><li><a href="/size-guide/">Size guide</a></li><li><a href="/how-it-works/">How it works</a></li><li><a href="/quality-control/">Quality control</a></li><li><a href="/shipping/">Shipping &amp; export</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/quote/">Request a quote</a></li></ul></div>
 <div><h4>Contact</h4><ul><li>${site.address}</li><li><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">WhatsApp ${site.whatsappDisplay}</a></li><li><a href="/contact/">Contact form</a></li></ul></div>
 </div>
-<div class="footer-bottom"><span>© ${new Date().getFullYear()} ${site.brand}. All rights reserved.</span><nav aria-label="Legal"><a href="/privacy/">Privacy Policy</a><a href="/terms/">Terms &amp; Conditions</a></nav></div>
+<div class="footer-bottom"><span>© ${new Date().getFullYear()} ${site.brand}. All rights reserved.</span><nav aria-label="Legal"><a href="/privacy/">Privacy Policy</a><a href="/terms/">Terms &amp; Conditions</a><a href="/shipping-policy/">Shipping Policy</a><a href="/refund-policy/">Refund Policy</a></nav></div>
 </div></footer>
 <a class="wa-float" href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">${I.wa}</a>
 <div class="toast" role="status" aria-live="polite"><span data-toast-text></span><a href="/quote/">View list</a></div>
@@ -153,7 +153,8 @@ ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script
 }
 
 /* ---------- Components ---------- */
-const crumbs = (items) => `<nav class="crumbs" aria-label="Breadcrumb">${items.map(([h, t], i) => (i < items.length - 1 ? `<a href="${h}">${t}</a><span aria-hidden="true">/</span>` : `<span aria-current="page">${t}</span>`)).join('')}</nav>`;
+const crumbLd = (items) => `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map(([h, t], i) => ({ '@type': 'ListItem', position: i + 1, name: t.replace(/&amp;/g, '&'), ...(h ? { item: site.domain + h } : {}) })) })}</script>`;
+const crumbs = (items) => crumbLd(items) + `<nav class="crumbs" aria-label="Breadcrumb">${items.map(([h, t], i) => (i < items.length - 1 ? `<a href="${h}">${t}</a><span aria-hidden="true">/</span>` : `<span aria-current="page">${t}</span>`)).join('')}</nav>`;
 const swatches = (cs) => `<div class="swatches" aria-label="Colours: ${cs.map((c) => colors[c].name).join(', ')}">${cs.map((c) => `<span class="sw" style="background:${colors[c].hex}" title="${colors[c].name}"></span>`).join('')}</div>`;
 function card(p) {
   const c0 = p.colors[0];
@@ -219,7 +220,7 @@ const contactFields = `<div class="form-row">${field('Contact person', 'Contact 
 </div><div class="hero-meta"><span>T-Shirts · Private Label · OEM / ODM</span><span>Phnom Penh — Worldwide</span></div></section>
 
 <section class="section"><div class="wrap">${head('Collections', 'Six collections, one standard.', 'Each collection is built on bodies we can produce at scale and finish under your label.', `<a class="link" href="/collections/">All collections ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
-<div class="coll-grid">${collections.map(collTile).join('')}</div></div></section>
+<div class="coll-grid">${collections.filter((c) => c.slug !== 'premium-cotton').map(collTile).join('')}</div></div></section>
 
 <section class="section section--panel"><div class="wrap">${head('Featured', 'Bodies buyers build ranges on.', 'Specification first: fabric, weight and fit on every card. Pricing is quoted per order quantity.', `<a class="link" href="/products/">Shop all products ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
 <div class="grid">${featuredList.map(card).join('')}</div></div></section>
@@ -256,6 +257,9 @@ const contactFields = `<div class="form-row">${field('Contact person', 'Contact 
 
 <section class="section section--panel"><div class="wrap">${head('Why choose us', 'Built for buyers who notice the details.')}
 <div class="feature-list rv">${why.map(([i, t, d]) => `<div>${featureIcons[i]}<h3>${t}</h3><p>${d}</p></div>`).join('')}</div></div></section>
+
+<section class="section"><div class="wrap">${head('How it works', 'From first request to delivery.', 'Six clear steps, with a sample approved before any bulk production.', `<a class="link" href="/how-it-works/">The full process ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
+<ol class="steps steps--6 rv">${howItWorks.map(([b, t]) => `<li><b>${b}</b><span>${t}</span></li>`).join('')}</ol></div></section>
 
 <section class="section section--black cta-final"><div class="wrap rv"><p class="eyebrow">Start a project</p><h2 class="h1">Let's create something exceptional.</h2>
 <div class="actions"><a class="btn btn--light" href="/custom-design/">Start Your Project</a><a class="btn btn--outline-light" href="/quote/">Request a Quote</a></div></div></section>`,
@@ -533,6 +537,38 @@ page({
 <div class="stat-plate"><dl><div><dt>WhatsApp</dt><dd><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener" style="text-decoration:underline">${site.whatsappDisplay}</a></dd></div><div><dt>Head office</dt><dd>${site.address}</dd></div><div><dt>Company</dt><dd>${site.brand}, a ${site.parent} company</dd></div><div><dt>Facebook</dt><dd><a href="https://www.facebook.com/siddiqiyatechnology" target="_blank" rel="noopener" style="text-decoration:underline">facebook.com/siddiqiyatechnology</a></dd></div></dl></div>
 <form class="panel-form form" data-wa="Website inquiry" data-kind="contact" novalidate>${contactFields}${field('Subject', 'Subject', { req: true, opts: ['Quotation', 'Samples', 'Private label', 'OEM / ODM', 'Wholesale account', 'Other'] })}${field('Message', 'Message', { type: 'textarea', req: true })}<button class="btn" type="submit">Send message</button>${waNote}</form>
 </div></section>`,
+});
+page({
+  path: '/how-it-works/', title: 'How It Works', desc: 'How a SIDDIQIYA Apparel order works: requirements, quotation, sample approval, production, quality inspection and international shipping.',
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'How It Works']])}<p class="eyebrow">Process</p><h1 class="h1">How it works</h1><p class="lead">A clear path from your first request to delivered cartons. Nothing goes into bulk production until you have approved a physical sample.</p></div></section>
+<section class="section--tight"><div class="wrap"><ol class="steps steps--6">${howItWorks.map(([b, t]) => `<li><b>${b}</b><span>${t}</span></li>`).join('')}</ol></div></section>
+<section class="section section--panel"><div class="wrap split" style="align-items:start"><div><p class="eyebrow">What to prepare</p><h2 class="h2">Information that speeds up your quotation.</h2></div>
+<div class="stat-plate"><dl><div><dt>Styles</dt><dd>Products from our catalog, or your tech pack or reference garment</dd></div><div><dt>Fabric</dt><dd>Fabric type and weight (GSM), or ask us to recommend one</dd></div><div><dt>Quantities</dt><dd>Pieces per colour and size</dd></div><div><dt>Decoration</dt><dd>Artwork files, placements and method (screen, DTG/DTF, embroidery)</dd></div><div><dt>Branding</dt><dd>Neck labels, hang tags and packaging requirements</dd></div><div><dt>Delivery</dt><dd>Destination country and target delivery date</dd></div></dl></div></div></section>
+<section class="section section--black cta-final"><div class="wrap"><h2 class="h1">Ready to start?</h2><div class="actions"><a class="btn btn--light" href="/quote/">Request a Quote</a><a class="btn btn--outline-light" href="/custom-design/">Design studio</a></div></div></section>`,
+});
+page({
+  path: '/quality-control/', title: 'Quality Control', desc: 'How SIDDIQIYA Apparel inspects fabric, workmanship, print and packing against your approved sample.',
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['/manufacturing/', 'Manufacturing'], ['', 'Quality Control']])}<p class="eyebrow">Quality</p><h1 class="h1">Inspected against your approved sample.</h1><p class="lead">Quality is checked at three points — when fabric arrives, during production, and before packing. Results are recorded for every production order and shared on request.</p></div></section>
+<section class="section--tight"><div class="wrap"><div class="feature-list">${[['fabric', 'Fabric inspection', 'Weight (GSM), shade against the approved standard, width and visible defects are checked before cutting.'], ['factory', 'In-line checks', 'Seam strength, stitch density, print registration and embroidery are checked during production.'], ['check', 'Final inspection', 'Measurements against the spec sheet, workmanship, colour consistency, finishing and packaging are inspected before shipment.']].map(([i, t, d]) => `<div>${featureIcons[i]}<h3>${t}</h3><p>${d}</p></div>`).join('')}</div></div></section>
+<section class="section section--panel"><div class="wrap split" style="align-items:start"><div><p class="eyebrow">Inspection checklist</p><h2 class="h2">What every final inspection covers.</h2><p class="lead" style="margin-top:18px">Defects are recorded with photos and notes. Goods that fail inspection are reworked or replaced before packing.</p></div>
+<div class="stat-plate"><dl>${[['Fabric quality', 'Hand feel, GSM, defects'], ['Measurements', 'Chest, length, sleeve against spec'], ['Stitching', 'Seam quality, stitch density, loose threads'], ['Print / embroidery', 'Placement, colour, adhesion'], ['Colour consistency', 'Shade across the lot'], ['Finishing', 'Pressing, trimming, labels'], ['Packaging', 'Folding, polybags, carton marks']].map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl></div></div></section>`,
+});
+page({
+  path: '/printing-embroidery/', title: 'Printing & Embroidery', desc: 'Screen printing, DTG and DTF printing and logo embroidery for custom T-shirts and private label apparel.',
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['/manufacturing/', 'Manufacturing'], ['', 'Printing & Embroidery']])}<p class="eyebrow">Decoration</p><h1 class="h1">Printing &amp; embroidery</h1><p class="lead">The right method depends on your artwork, quantities and fabric. We advise on each order and sample every decoration before bulk.</p></div></section>
+<section class="section--tight"><div class="wrap"><div class="fab-grid">${[['Screen printing', 'Plastisol and water-based inks for sharp, durable prints. Best for bulk orders with a limited number of colours.', ['Bulk quantities', 'Spot colours', 'Excellent durability'], 'screen-printing'], ['DTG printing', 'Direct-to-garment printing for full-colour and photographic artwork on cotton, suited to smaller runs.', ['Full colour', 'Fine detail', 'Small to mid runs'], 'digital-printing'], ['DTF printing', 'Direct-to-film transfers that work across cotton, blends and polyester with bright, full-colour results.', ['Works on blends', 'Full colour', 'Flexible placements'], 'digital-printing'], ['Embroidery', 'Flat and 3D puff embroidery for logos and marks, digitised and stitched to your colour references.', ['Premium finish', 'Logos and marks', 'Long lasting'], 'logo-embroidery']].map(([t, d, pts, slug]) => `<a class="fab" href="/manufacturing/${slug}/"><div class="fab-body"><span class="eyebrow" style="display:block;margin-bottom:10px">Method</span><h2 class="h3">${t}</h2><p>${d}</p><div class="gsm-row" style="margin-bottom:16px">${pts.map((x) => `<span class="gsm">${x}</span>`).join('')}</div><span class="link">Inquire</span></div></a>`).join('')}</div></div></section>
+<section class="section section--panel"><div class="wrap split"><div><p class="eyebrow">Artwork</p><h2 class="h2">Preparing your files.</h2><p class="lead" style="margin-top:18px">Vector files (AI, SVG, PDF) or high-resolution PNG with a transparent background give the best results. Include Pantone references where colour matching matters.</p><div class="actions"><a class="btn" href="/custom-design/">Preview in the design studio</a></div></div>
+<div class="stat-plate"><dl><div><dt>Vector</dt><dd>AI, SVG, PDF — ideal for screen printing and embroidery</dd></div><div><dt>Raster</dt><dd>PNG or JPG at 300 dpi at print size</dd></div><div><dt>Colours</dt><dd>Pantone references for spot colours</dd></div><div><dt>Placement</dt><dd>Front, back, sleeves, neck or hem</dd></div></dl></div></div></section>`,
+});
+page({
+  path: '/shipping-policy/', title: 'Shipping Policy', desc: 'Shipping terms for SIDDIQIYA Apparel orders.', priority: 0.2,
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Shipping Policy']])}<h1 class="h1">Shipping Policy</h1><p class="muted">Last updated: November 2026</p></div></section>
+<section class="section--tight"><div class="wrap prose"><h2>Shipping terms</h2><p>Every order is shipped on the Incoterms stated on its quotation and purchase order (for example FOB, CIF or DDP). The Incoterm defines who pays freight, insurance, duties and taxes, and where responsibility passes to the buyer.</p><h2>Methods</h2><p>Orders are shipped by express courier, air freight or sea freight depending on volume, destination and timeline. The method and cost are confirmed in writing before dispatch.</p><h2>Samples</h2><p>Samples are sent by express courier. Courier costs are confirmed with you before dispatch.</p><h2>Delivery times</h2><p>Production lead time and estimated transit time are given on your quotation. Transit times are estimates and can be affected by customs clearance and carrier delays outside our control.</p><h2>Duties and taxes</h2><p>Unless the agreed Incoterm states otherwise, import duties, taxes and customs fees in the destination country are the buyer's responsibility.</p><h2>Tracking</h2><p>Carrier name and tracking reference are shared once goods are dispatched and are shown in your buyer account for orders placed through it.</p><h2>Contact</h2><p>${site.brand}, ${site.address}. WhatsApp ${site.whatsappDisplay}.</p></div></section>`,
+});
+page({
+  path: '/refund-policy/', title: 'Refund Policy', desc: 'Refund and claims policy for SIDDIQIYA Apparel orders.', priority: 0.2,
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Refund Policy']])}<h1 class="h1">Refund Policy</h1><p class="muted">Last updated: November 2026</p></div></section>
+<section class="section--tight"><div class="wrap prose"><h2>Made-to-order goods</h2><p>Bulk and custom orders are produced to your approved sample and specification. They cannot be cancelled or returned for change of mind once production has started.</p><h2>Quality claims</h2><p>If goods do not match the approved sample or contain manufacturing defects beyond agreed tolerances, notify us within 14 days of delivery with your order reference, photos and the quantities affected.</p><h2>Resolution</h2><p>After reviewing a valid claim, we will repair, replace or credit the affected pieces, or refund their value, as agreed with you in writing. Refunds are made by the original payment method.</p><h2>Samples</h2><p>Sample charges and courier costs are non-refundable once a sample has been produced, unless the sample is defective.</p><h2>Cancellations before production</h2><p>Orders cancelled before production starts may be subject to charges for materials already purchased or work already completed, as set out in your purchase order.</p><h2>Contact</h2><p>${site.brand}, ${site.address}. WhatsApp ${site.whatsappDisplay}.</p></div></section>`,
 });
 page({
   path: '/size-guide/', title: 'Size Guide', desc: 'Reference T-shirt measurements for regular and oversized fits.',

@@ -71,6 +71,14 @@ export const fabrics = [
     description: 'Dense, structured jersey that hangs with weight and holds its silhouette. The base for premium oversized and boxy fits.',
     colors: ['black', 'bone', 'washed', 'stone', 'olive', 'white'], applications: ['Heavyweight tees', 'Oversized fits', 'Streetwear labels'],
     care: ['Machine wash cold, inside out', 'Line dry to limit shrinkage', 'Warm iron on reverse'] },
+  { slug: 'fleece', name: 'Fleece', composition: 'Cotton / polyester brushed-back fleece (80/20 or 60/40)', gsm: [280, 320, 360], texture: 'fleece',
+    description: 'A smooth face with a soft, brushed reverse that traps warmth. Used for heavier tees, sweatshirts and cold-season programmes.',
+    colors: ['heather', 'black', 'navy', 'bone', 'olive'], applications: ['Sweatshirts', 'Heavy long-sleeve tees', 'Cold-season merchandise'],
+    care: ['Machine wash cold, inside out', 'Do not tumble dry hot', 'Do not iron print'] },
+  { slug: 'rib', name: 'Rib Fabric', composition: 'Cotton / elastane 1×1 or 2×2 rib knit', gsm: [180, 200, 240], texture: 'rib',
+    description: 'Vertical ribs that stretch and recover. Used for fitted tees, neck bands, cuffs and hems.',
+    colors: ['black', 'white', 'bone', 'charcoal', 'sage'], applications: ['Fitted tees', 'Neck bands and cuffs', 'Layering pieces'],
+    care: ['Machine wash cold', 'Dry flat to keep shape', 'Cool iron'] },
 ];
 
 export const gsmOptions = [140, 160, 180, 200, 220, 240, 280, 320];
@@ -97,6 +105,7 @@ export const collections = [
   { slug: 'streetwear', name: 'Streetwear Collection', kicker: 'Built for the street', lead: 'Heavy, boxy and bold — bodies made to carry statement graphics.', cats: ['streetwear-t-shirts', 'vintage-wash-t-shirts'], tone: 'dark', shirts: ['black', 'olive', 'washed'] },
   { slug: 'premium-cotton', name: 'Premium Cotton Collection', kicker: 'Fibre first', lead: 'Combed, organic and heavyweight cottons chosen for hand feel and longevity.', cats: ['premium-cotton-t-shirts', 'organic-cotton-t-shirts', 'heavyweight-t-shirts'], tone: 'beige', shirts: ['bone', 'sage', 'stone'] },
   { slug: 'graphic', name: 'Graphic Collection', kicker: 'Print-led design', lead: 'Artwork-ready bodies and placement options for graphic-driven ranges.', cats: ['graphic-t-shirts', 'custom-printed-t-shirts'], tone: 'bone', shirts: ['white', 'black', 'brick'] },
+  { slug: 'polo', name: 'Polo Collection', kicker: 'Collared classics', lead: 'Pique and jersey polos with crisp collars and clean plackets for retail, clubs and corporate programmes.', cats: ['polo-t-shirts'], tone: 'stone', shirts: ['navy', 'white', 'forest'] },
   { slug: 'sportswear', name: 'Sportswear Collection', kicker: 'Performance in motion', lead: 'Dry fit and pique pieces engineered for training, teams and clubs.', cats: ['sports-t-shirts', 'polo-t-shirts'], tone: 'dark', shirts: ['cobalt', 'black', 'white'] },
 ];
 
@@ -146,6 +155,15 @@ export const services = [
   { slug: 'private-label-production', name: 'Private Label Production', group: 'Manufacturing', text: 'Our proven bodies, finished entirely under your brand — labels, tags and packaging included.' },
   { slug: 'oem-manufacturing', name: 'OEM Manufacturing', group: 'Manufacturing', text: 'We manufacture to your complete design and specifications, from tech pack to packed cartons.' },
   { slug: 'odm-manufacturing', name: 'ODM Manufacturing', group: 'Manufacturing', text: 'We design and develop the product with you, then manufacture it for your brand.' },
+];
+
+export const howItWorks = [
+  ['Submit requirements', 'Send your styles, fabrics, quantities and artwork through a quotation request.'],
+  ['Receive quotation', 'Our sales team replies with pricing, MOQ, lead time and shipping terms.'],
+  ['Approve sample', 'A pre-production sample is made to your specification for approval.'],
+  ['Confirm production', 'Purchase order and payment terms are agreed and production is scheduled.'],
+  ['Quality inspection', 'Goods are inspected against the approved sample before packing.'],
+  ['International shipping', 'Orders are packed, documented and shipped on the agreed Incoterms.'],
 ];
 
 export const productionSteps = [

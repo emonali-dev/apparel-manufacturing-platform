@@ -188,6 +188,12 @@ export function fabricSVG({ texture = 'jersey', color = '#e7dfd0', uid = 'f' } =
     case 'terry':
       pat = P(18, 18, `<rect width="18" height="18" fill="${lo}"/><circle cx="9" cy="9" r="6.4" fill="none" stroke="${color}" stroke-width="3.4"/><circle cx="7.6" cy="7.4" r="1.8" fill="${hi}" opacity=".6"/>`);
       break;
+    case 'rib':
+      pat = P(10, 12, `<rect width="10" height="12" fill="${color}"/><rect x="0" width="4" height="12" fill="${lo}" opacity=".55"/><rect x="5" width="1.4" height="12" fill="${hi}" opacity=".35"/>`);
+      break;
+    case 'fleece':
+      pat = P(14, 14, `<rect width="14" height="14" fill="${color}"/><circle cx="3" cy="4" r="2.2" fill="${hi}" opacity=".22"/><circle cx="10" cy="9" r="2.6" fill="${lo}" opacity=".22"/><circle cx="6" cy="12" r="1.6" fill="${hi}" opacity=".18"/>`);
+      break;
     case 'mesh':
       pat = P(16, 16, `<rect width="16" height="16" fill="${color}"/><circle cx="8" cy="8" r="4" fill="${lo}"/><circle cx="7.2" cy="7.2" r="1.5" fill="${shade(lo, -0.3)}"/>`);
       break;
