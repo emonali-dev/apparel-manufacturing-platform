@@ -400,7 +400,7 @@ if (root) {
     }).filter(Boolean);
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!S.validate(form)) return;
     const keys = $$('[data-studio-colors] input:checked').map((i) => i.value);
@@ -420,8 +420,24 @@ if (root) {
       state.files.length ? `Artwork files (attaching in this chat): ${state.files.map((f) => f.name).join(', ')}` : 'Artwork: none uploaded yet', '',
       ...S.collect(form).filter((l) => !/^(T-shirt category|Fabric|Weight \(GSM\)):/.test(l)),
     ];
-    S.openWhatsApp(lines.join('\n'));
-    S.toast(state.files.length ? 'WhatsApp opened — attach your artwork files, then press send.' : 'WhatsApp opened — press send to deliver your request.');
+    const waText = lines.join('\n');
+    const old = form.querySelector('.form-error');
+    if (old) old.remove();
+    const payload = S.inquiryPayload(form, 'studio', {
+      Category: catSel.value, Fabric: fabSel.value, Weight: `${gsmSel.value} GSM`,
+      Colours: keys.map((k) => SA.colors[k].name).join(', '), Sizes: `${sizes} (total ${t} pcs)`, Method: method,
+      Placements: pls.join('\n') || 'No placement selected yet',
+      'Artwork files': state.files.length ? `${state.files.map((f) => f.name).join(', ')} — to be sent on WhatsApp` : 'None uploaded yet',
+    });
+    payload.subject = `Custom design — ${catSel.value}, ${t} pcs`;
+    S.busy(form, true);
+    try {
+      const r = await window.SB.rpc('apparel_submit_inquiry', { p: payload });
+      S.showDone(form, { code: r.code, tracked: false }, waText);
+      if (state.files.length) S.toast('Request saved. Send your artwork files on WhatsApp using the button below.');
+    } catch (err) {
+      S.showError(form, err, waText);
+    } finally { S.busy(form, false); }
   });
 
   /* ---------- init ---------- */

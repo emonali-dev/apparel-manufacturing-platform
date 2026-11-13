@@ -138,6 +138,41 @@ ${fades}
 </g>${collar}${label}</svg>`;
 }
 
+/** Side profile of the garment (sleeve towards the viewer). */
+export function teeSideSVG({ shape = 'crew', color = '#e7dfd0', finish = '', uid = 's' } = {}) {
+  const big = shape === 'oversized' || shape === 'drop' || shape === 'heavy';
+  const light = luminance(color) > 0.35;
+  const seam = light ? 'rgba(0,0,0,.18)' : 'rgba(255,255,255,.15)';
+  const w = big ? 176 : 156;
+  const x0 = 200 - w / 2, x1 = 200 + w / 2;
+  const hem = big ? 412 : 404;
+  const top = big ? 66 : 60;
+  // Body seen from the side: rounded shoulder, gentle chest curve, straight side seam to the hem.
+  const body = `M${x0 + 34} ${top} Q200 ${top - 14} ${x1 - 30} ${top + 2} Q${x1 + 2} ${top + 10} ${x1 + 4} ${top + 70} L${x1 + 6} ${hem - 8} Q${x1 + 6} ${hem} ${x1 - 2} ${hem} L${x0 + 2} ${hem} Q${x0 - 6} ${hem} ${x0 - 6} ${hem - 8} L${x0 - 4} ${top + 70} Q${x0 - 2} ${top + 8} ${x0 + 34} ${top} Z`;
+  // Sleeve hanging from the shoulder, angled slightly forward.
+  const sl = big
+    ? `M${x0 + 26} ${top + 6} Q200 ${top - 12} ${x1 - 22} ${top + 8} L${x1 + 2} ${top + 150} Q200 ${top + 168} ${x0 + 14} ${top + 146} Z`
+    : `M${x0 + 30} ${top + 4} Q200 ${top - 10} ${x1 - 26} ${top + 6} L${x1 - 6} ${top + 122} Q200 ${top + 138} ${x0 + 20} ${top + 118} Z`;
+  const cuff = big ? `M${x0 + 16} ${top + 136} Q200 ${top + 156} ${x1} ${top + 140}` : `M${x0 + 22} ${top + 108} Q200 ${top + 126} ${x1 - 8} ${top + 112}`;
+  const sleeveFill = shade(color, light ? -0.04 : 0.06);
+  const collarFill = shade(color, light ? -0.1 : 0.08);
+  const fades = finish === 'vintage' ? `<ellipse cx="200" cy="300" rx="70" ry="80" fill="#fff" opacity=".07"/>` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440" role="img"><defs>
+<linearGradient id="${uid}l" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".2"/><stop offset=".4" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient>
+<linearGradient id="${uid}v" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
+<linearGradient id="${uid}sl" x1="0" x2="1" y1="0" y2=".3"><stop offset="0" stop-color="#000" stop-opacity=".14"/><stop offset=".45" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
+<pattern id="${uid}k" width="2.4" height="3.4" patternUnits="userSpaceOnUse"><path d="M0 0 L1.2 2.1 L2.4 0" fill="none" stroke="${light ? '#000' : '#fff'}" stroke-width=".4"/></pattern>
+<filter id="${uid}s" x="-30%" y="-20%" width="160%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#2a2014" flood-opacity=".22"/></filter>
+<filter id="${uid}d" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="2" dy="6" stdDeviation="5" flood-color="#000" flood-opacity=".18"/></filter>
+<clipPath id="${uid}c"><path d="${body}"/></clipPath></defs>
+<g filter="url(#${uid}s)"><path d="${body}" fill="${color}"/></g>
+<g clip-path="url(#${uid}c)"><rect width="400" height="440" fill="url(#${uid}l)"/><rect width="400" height="440" fill="url(#${uid}v)"/>${fades}<rect width="400" height="440" fill="url(#${uid}k)" opacity=".045"/>
+<path d="M${x0 + 4} ${hem - 12} L${x1} ${hem - 12}" stroke="${seam}" stroke-dasharray="2.6 2" fill="none"/><path d="M${x0 - 6} ${hem - 9} L${x1 + 6} ${hem - 9}" stroke="${seam}" stroke-dasharray="2.6 2" fill="none"/><path d="M201 ${top + 150} L203 ${hem}" stroke="${seam}" stroke-width=".9" fill="none"/></g>
+<path d="M${x0 + 40} ${top - 1} Q200 ${top - 16} ${x1 - 34} ${top + 1} Q200 ${top - 6} ${x0 + 40} ${top - 1} Z" fill="${collarFill}" stroke="${seam}" stroke-width=".8"/>
+<g filter="url(#${uid}d)"><path d="${sl}" fill="${sleeveFill}"/></g><path d="${sl}" fill="url(#${uid}sl)"/><path d="${sl}" fill="url(#${uid}k)" opacity=".045"/>
+<path d="${cuff}" fill="none" stroke="${seam}" stroke-dasharray="2.6 2"/><path d="${sl}" fill="none" stroke="${seam}" stroke-width=".8"/></svg>`;
+}
+
 /** Close-up fabric swatch. */
 export function fabricSVG({ texture = 'jersey', color = '#e7dfd0', uid = 'f' } = {}) {
   const light = luminance(color) > 0.35;

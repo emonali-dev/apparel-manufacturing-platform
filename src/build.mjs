@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { site, colors, fabrics, categories, collections, products, services, productionSteps, gsmOptions } from './data.mjs';
-import { teeSVG, fabricSVG } from './art.mjs';
+import { teeSVG, teeSideSVG, fabricSVG } from './art.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = (rel, content) => {
@@ -20,7 +20,7 @@ const fabBy = Object.fromEntries(fabrics.map((f) => [f.slug, f]));
 const shapeOf = (p) => catBy[p.cat].shape;
 
 // Clean previous output
-for (const d of ['products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping', 'assets/img']) {
+for (const d of ['account', 'admin', 'products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping', 'assets/img']) {
   fs.rmSync(path.join(ROOT, d), { recursive: true, force: true });
 }
 
@@ -33,6 +33,7 @@ for (const p of products) {
     out(img(p, c, 'front'), teeSVG({ ...base, view: 'front', uid: 'a' }));
     out(img(p, c, 'back'), teeSVG({ ...base, view: 'back', uid: 'b' }));
     out(img(p, c, 'neck'), teeSVG({ ...base, view: 'front', crop: true, uid: 'c' }));
+    out(img(p, c, 'side'), teeSideSVG({ shape: base.shape, color: base.color, finish: base.finish, uid: 'd' }));
   }
 }
 const fabricColorSet = new Set();
@@ -57,6 +58,7 @@ const I = {
   fb: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8V6.5c0-.7.2-1.1 1.2-1.1H17V2h-2.6C11.6 2 10.8 3.7 10.8 6.2V8H8.5v3.3h2.3V22H14V11.3h2.8L17.2 8z"/></svg>',
   info: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>',
   upload: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>',
+  user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
 };
 const featureIcons = {
   fabric: '<svg viewBox="0 0 40 40"><path d="M6 10c6-4 22-4 28 0v20c-6 4-22 4-28 0z"/><path d="M6 17c6 4 22 4 28 0M6 24c6 4 22 4 28 0"/></svg>',
@@ -90,6 +92,7 @@ function header(p) {
 <nav class="nav" aria-label="Main">${links}</nav>
 <div class="tools">
 <button class="icon-btn" data-search-open aria-label="Search">${I.search}</button>
+<a class="icon-btn" href="/account/" aria-label="Buyer account" data-account-link>${I.user}</a>
 <a class="icon-btn hide-sm" href="/wishlist/" aria-label="Wishlist">${I.heart}<span class="count" data-wish-count></span></a>
 <a class="icon-btn" href="/quote/" aria-label="Quote list">${I.bag}<span class="count" data-quote-count></span></a>
 <a class="btn btn--sm" href="/quote/">Request a Quote</a>
@@ -101,7 +104,7 @@ function header(p) {
 <nav aria-label="Mobile">${navItems.map(([h, t]) => (h === '/products/'
     ? `<details class="drawer-acc"><summary>${t}<span aria-hidden="true">+</span></summary><div class="sub"><a href="/products/">All products</a>${categories.map((c) => `<a href="/categories/${c.slug}/">${c.name.replace(' T-Shirts', '')}</a>`).join('')}</div></details>`
     : `<a href="${h}"${isActive(h, p) ? ' aria-current="page"' : ''}>${t}<span aria-hidden="true">→</span></a>`)).join('')}
-<div class="drawer-links"><a href="/wishlist/">${I.heart} Wishlist <span class="count" data-wish-count></span></a><a href="/quote/">${I.bag} Quote list <span class="count" data-quote-count></span></a></div></nav>
+<div class="drawer-links"><a href="/account/" class="span-2">${I.user} Buyer account</a><a href="/wishlist/">${I.heart} Wishlist <span class="count" data-wish-count></span></a><a href="/quote/">${I.bag} Quote list <span class="count" data-quote-count></span></a></div></nav>
 <div class="drawer-foot"><a class="btn" href="/quote/">Request a Quote</a><a class="btn btn--ghost" href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">${I.wa} WhatsApp ${site.whatsappDisplay}</a></div>
 </div>
 <div class="search-ov" data-open="false" role="dialog" aria-modal="true" aria-label="Search"><div class="search-box"><div class="wrap">
@@ -115,7 +118,7 @@ function footer() {
 <div class="footer-top">
 <div><a class="logo" href="/"><b>SIDDIQIYA</b><small>APPAREL</small></a>
 <p style="max-width:36ch;margin:24px 0 0">Premium T-shirt design, custom manufacturing and global apparel solutions — a ${site.parent} company.</p>
-<form class="news" data-wa="Collection updates" novalidate><label class="sr-only" for="news-email">Email for collection updates</label><input id="news-email" name="Email" type="email" placeholder="Email for collection updates" required data-label="Please add me to collection updates. Email"><button type="submit">Join</button></form>
+<form class="news" data-wa="Collection updates" data-kind="newsletter" data-compact novalidate><label class="sr-only" for="news-email">Email for collection updates</label><input id="news-email" name="Email" type="email" placeholder="Email for collection updates" required data-label="Please add me to collection updates. Email"><button type="submit">Join</button></form>
 <div class="socials"><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener" aria-label="WhatsApp">${I.wa}</a><a href="https://www.facebook.com/siddiqiyatechnology" target="_blank" rel="noopener" aria-label="Facebook">${I.fb}</a></div>
 </div>
 <div><h4>Products</h4><ul>${categories.slice(0, 7).map((c) => `<li><a href="/categories/${c.slug}/">${c.name}</a></li>`).join('')}<li><a href="/products/">All products</a></li></ul></div>
@@ -131,22 +134,22 @@ function footer() {
 }
 
 const pages = [];
-function page({ path: p, title, desc, body, schema, image, priority = 0.7, scripts = '' }) {
+function page({ path: p, title, desc, body, schema, image, priority = 0.7, scripts = '', noindex = false }) {
   const url = site.domain + p;
   const t = p === '/' ? `${site.brand} — Premium T-Shirt Design & Manufacturing` : `${title} | ${site.brand}`;
   const og = site.domain + (image || '/assets/img/p/box-oversized-tee-sand-front.svg');
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(t)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="${site.brand}"><meta property="og:title" content="${esc(t)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${og}"><meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#111111"><link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
+${noindex ? '<meta name="robots" content="noindex, nofollow">' : ''}<meta name="theme-color" content="#111111"><link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
 <link rel="stylesheet" href="/assets/css/site.css?v=${VERSION}">
 ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script>` : ''}
 </head><body>${header(p)}<main id="main">${body}</main>${footer()}
-<script src="/assets/js/data.js?v=${VERSION}"></script><script src="/assets/js/site.js?v=${VERSION}" defer></script>${scripts}</body></html>`;
+<script src="/assets/js/data.js?v=${VERSION}"></script><script src="/assets/js/sb.js?v=${VERSION}"></script><script src="/assets/js/site.js?v=${VERSION}" defer></script><script type="module" src="/assets/js/live.mjs?v=${VERSION}"></script>${scripts}</body></html>`;
   out(p === '/404.html' ? '404.html' : path.join(p, 'index.html'), html.replace(/<img (?![^>]*decoding)/g, '<img decoding="async" '));
-  if (p !== '/404.html') pages.push([p, priority]);
+  if (p !== '/404.html' && !noindex) pages.push([p, priority]);
 }
 
 /* ---------- Components ---------- */
@@ -172,7 +175,7 @@ const collArt = (c) => {
   }).join('');
 };
 const collTile = (c) => `<a class="coll rv" data-tone="${c.tone}" href="/collections/${c.slug}/"><div class="art">${collArt(c)}</div><div class="meta"><div><small>${c.kicker}</small><b>${c.name}</b></div><span class="arrow">${I.arrow}</span></div></a>`;
-const waNote = `<p class="form-note">${I.info}<span>Submitting opens WhatsApp with your details filled in, addressed to our sales team at ${site.whatsappDisplay}. Nothing is stored on this website.</span></p>`;
+const waNote = `<p class="form-note">${I.info}<span>Your request is saved securely and our sales team is notified straight away. You get a reference number, and can also continue on WhatsApp at ${site.whatsappDisplay}.</span></p>`;
 const field = (name, label, { type = 'text', req = false, ph = '', opts = null, full = false, auto = '' } = {}) => {
   const id = 'f-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const r = req ? ' required' : '';
@@ -335,8 +338,9 @@ for (const p of products) {
 <div class="gallery" data-gallery>
 <figure><img data-view="front" src="${img(p, c0, 'front')}" alt="${esc(p.name)} front view" width="400" height="440"><figcaption>Front</figcaption></figure>
 <figure><img data-view="back" src="${img(p, c0, 'back')}" alt="${esc(p.name)} back view" width="400" height="440"><figcaption>Back</figcaption></figure>
+<figure><img data-view="side" src="${img(p, c0, 'side')}" alt="${esc(p.name)} side view" width="400" height="440" loading="lazy"><figcaption>Side</figcaption></figure>
 <figure><img data-view="neck" src="${img(p, c0, 'neck')}" alt="${esc(p.name)} neckline detail" width="400" height="440" loading="lazy"><figcaption>Neck detail</figcaption></figure>
-<figure class="fabric"><img data-view="fabric" src="${fimg(p.fabric, c0)}" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><figcaption>Fabric close-up</figcaption></figure>
+<figure class="fabric wide"><img data-view="fabric" src="${fimg(p.fabric, c0)}" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><figcaption>Fabric close-up</figcaption></figure>
 </div>
 <div class="pdp-info">
 <span class="pdp-id">${p.id} · ${c.name}</span><h1 class="h1">${p.name}</h1><p class="muted" style="margin:0">${p.desc}</p>
@@ -350,7 +354,7 @@ for (const p of products) {
 <div><dt>Product ID</dt><dd>${p.id}</dd></div><div><dt>Fabric</dt><dd><a href="/fabrics/${f.slug}/" style="text-decoration:underline">${f.name}</a> — ${f.composition}</dd></div>
 <div><dt>Weight</dt><dd>${p.gsm} GSM (other weights: ${f.gsm.join(', ')})</dd></div><div><dt>Fit</dt><dd>${p.fit}</dd></div>
 <div><dt>Sizes</dt><dd>${p.sizes.join(' · ')}</dd></div><div><dt>Customisation</dt><dd>Available — print, embroidery, labels, packaging</dd></div>
-<div><dt>MOQ</dt><dd>Confirmed with your quotation</dd></div><div><dt>Lead time</dt><dd>Confirmed with your quotation</dd></div><div><dt>Availability</dt><dd>Made to order</dd></div>
+<div><dt>MOQ</dt><dd data-live-moq>Confirmed with your quotation</dd></div><div><dt>Lead time</dt><dd data-live-lead>Confirmed with your quotation</dd></div><div><dt>Availability</dt><dd>Made to order</dd></div>
 </dl>
 <details class="acc" id="size-chart"><summary>Size chart</summary><div>${sizeRef(p.fit)}</div></details>
 <details class="acc"><summary>Fabric &amp; care</summary><div><p style="margin-top:0">${f.description}</p><ul>${f.care.map((x) => `<li>${x}</li>`).join('')}</ul></div></details>
@@ -358,14 +362,14 @@ for (const p of products) {
 </div></section>
 <section class="section section--panel" id="inquiry"><div class="wrap">${head('Samples & wholesale', 'Order a sample or open a wholesale inquiry.', 'Both requests go straight to our sales team with this style already filled in.')}
 <div class="inquiry-grid">
-<form class="panel-form form" id="sample-request" data-wa="Sample request — ${esc(p.name)} [${p.id}]" novalidate><h3 class="h3">Sample request</h3>
-<div class="form-row"><div class="field"><label for="s-colour-${p.id}">Colour <span class="req">*</span></label><select class="input" id="s-colour-${p.id}" name="Sample colour" required><option value="">Select…</option>${p.colors.map((k) => `<option>${colors[k].name}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div>
+<form class="panel-form form" id="sample-request" data-wa="Sample request — ${esc(p.name)} [${p.id}]" data-kind="sample" data-sample="product:${p.id}" novalidate><h3 class="h3">Sample request</h3>
+<div class="form-row"><div class="field"><label for="s-colour-${p.id}">Colour <span class="req">*</span></label><select class="input" id="s-colour-${p.id}" name="Sample colour" required><option value="">Select…</option>${p.colors.map((k) => `<option value="${k}">${colors[k].name}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div>
 <div class="field"><label for="s-size-${p.id}">Size <span class="req">*</span></label><select class="input" id="s-size-${p.id}" name="Sample size" required><option value="">Select…</option>${p.sizes.map((z) => `<option>${z}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div></div>
 <div class="form-row"><div class="field"><label for="s-name-${p.id}">Contact person <span class="req">*</span></label><input class="input" id="s-name-${p.id}" name="Contact person" autocomplete="name" required><span class="err" aria-live="polite"></span></div>
 <div class="field"><label for="s-email-${p.id}">Business email <span class="req">*</span></label><input class="input" id="s-email-${p.id}" name="Email" type="email" autocomplete="email" required><span class="err" aria-live="polite"></span></div></div>
 <div class="field"><label for="s-addr-${p.id}">Delivery address <span class="req">*</span></label><textarea class="input" id="s-addr-${p.id}" name="Delivery address" required style="min-height:96px"></textarea><span class="err" aria-live="polite"></span></div>
 <p class="hint">Sample and courier costs are confirmed with you before dispatch.</p><button class="btn" type="submit">Request sample</button></form>
-<form class="panel-form form" id="wholesale-inquiry" data-wa="Wholesale inquiry — ${esc(p.name)} [${p.id}]" novalidate><h3 class="h3">Wholesale inquiry</h3>
+<form class="panel-form form" id="wholesale-inquiry" data-wa="Wholesale inquiry — ${esc(p.name)} [${p.id}]" data-kind="wholesale" novalidate><h3 class="h3">Wholesale inquiry</h3>
 <div class="form-row"><div class="field"><label for="w-co-${p.id}">Company <span class="req">*</span></label><input class="input" id="w-co-${p.id}" name="Company" autocomplete="organization" required><span class="err" aria-live="polite"></span></div>
 <div class="field"><label for="w-country-${p.id}">Country <span class="req">*</span></label><select class="input" id="w-country-${p.id}" name="Country" required><option value="">Select…</option>${countries.map((c) => `<option>${c}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div></div>
 <div class="form-row"><div class="field"><label for="w-email-${p.id}">Business email <span class="req">*</span></label><input class="input" id="w-email-${p.id}" name="Email" type="email" autocomplete="email" required><span class="err" aria-live="polite"></span></div>
@@ -397,8 +401,8 @@ for (const f of fabrics) {
 </div></section>
 ${ps.length ? `<section class="section section--panel"><div class="wrap">${head('Made in this fabric', 'Styles in ' + f.name)}<div class="grid">${ps.map(card).join('')}</div></div></section>` : ''}
 <section class="section" id="sample"><div class="wrap split" style="align-items:start"><div><p class="eyebrow">Sample request</p><h2 class="h2">Feel it before you order.</h2><p class="lead" style="margin-top:18px">Tell us the colours and weights you want to see, and where to send the swatches. Courier costs are confirmed with you first.</p></div>
-<form class="panel-form form" data-wa="Fabric sample request — ${esc(f.name)}" novalidate>${contactFields}
-<div class="form-row">${field('GSM', 'Weight (GSM)', { opts: f.gsm.map(String) })}${field('Colours', 'Colours', { ph: f.colors.map((k) => colors[k].name).slice(0, 3).join(', ') })}</div>
+<form class="panel-form form" data-wa="Fabric sample request — ${esc(f.name)}" data-kind="sample" data-sample="fabric:${f.slug}" novalidate>${contactFields}
+<div class="form-row">${field('GSM', 'Weight (GSM)', { opts: f.gsm.map(String) })}<div class="field"><label for="f-colours">Colour <span class="req">*</span></label><select class="input" id="f-colours" name="Colours" required><option value="">Select…</option>${f.colors.map((k) => `<option value="${k}">${colors[k].name}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div></div>
 ${field('Shipping address', 'Shipping address for swatches', { type: 'textarea', req: true })}<button class="btn" type="submit">Request sample</button>${waNote}</form></div></section>`,
   });
 }
@@ -467,7 +471,7 @@ for (const s of services) {
     body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['/manufacturing/', 'Manufacturing'], ['', s.name]])}<p class="eyebrow">${s.group}</p><h1 class="h1">${s.name}</h1><p class="lead">${s.text}</p></div></section>
 <section class="section--tight"><div class="wrap split" style="align-items:start">
 <div><h2 class="h3">How it works</h2><ol class="steps" style="grid-template-columns:1fr;margin-top:20px"><li><b>Send your inquiry</b><span>Share quantities, timing and what you have ready.</span></li><li><b>Specification &amp; quotation</b><span>We confirm details, options and a written quotation.</span></li><li><b>Sample approval</b><span>A pre-production sample is approved before bulk.</span></li><li><b>Production &amp; delivery</b><span>Produced, inspected and shipped to your destination.</span></li></ol></div>
-<form class="panel-form form" data-wa="${esc(s.name)} inquiry" novalidate><h2 class="h3">Inquiry form</h2>${contactFields}
+<form class="panel-form form" data-wa="${esc(s.name)} inquiry" data-kind="service" novalidate><h2 class="h3">Inquiry form</h2>${contactFields}
 <div class="form-row">${field('Product', 'Product type', { opts: categories.map((c) => c.name) })}${field('Quantity', 'Estimated quantity (pieces)', { type: 'number', req: true })}</div>
 <div class="form-row">${field(xl, xl, { opts: xo })}${field('Target date', 'Target delivery date', { type: 'date' })}</div>
 ${field('Details', 'Project details', { type: 'textarea', req: true, ph: 'Describe the product, decoration, colours and anything else we should know.' })}<button class="btn" type="submit">Send inquiry</button>${waNote}</form>
@@ -484,7 +488,7 @@ page({
 <section class="section"><div class="wrap">${head('Who we supply', 'Built for every kind of trade buyer.')}<div class="buyers rv">${businessTypes.map((b) => `<span>${b}</span>`).join('')}</div></div></section>
 <section class="section section--panel"><div class="wrap">${head('How it works', 'From application to delivery.')}<ol class="steps">${[['Apply', 'Submit your company details below.'], ['Verification', 'We confirm your business and set your account type.'], ['Trade pricing', 'Receive tiered wholesale pricing and MOQs for your styles.'], ['RFQ', 'Send quantities with size and colour breakdowns.'], ['Samples', 'Approve pre-production samples.'], ['Bulk order', 'A purchase order and payment terms are agreed.'], ['Production', 'Your order moves through tracked production stages.'], ['Shipment', 'Packed, documented and shipped on agreed Incoterms.']].map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join('')}</ol></div></section>
 <section class="section" id="apply"><div class="wrap split" style="align-items:start"><div><p class="eyebrow">Buyer application</p><h2 class="h2">Apply for a wholesale account.</h2><p class="lead" style="margin-top:18px">Wholesale pricing is not shown publicly. Once verified, our sales team shares pricing and MOQs for the styles you choose.</p></div>
-<form class="panel-form form" data-wa="Wholesale buyer application" novalidate>
+<form class="panel-form form" data-wa="Wholesale buyer application" data-kind="wholesale" novalidate>
 <div class="form-row">${field('Company', 'Company name', { req: true, auto: 'organization' })}${field('Contact person', 'Contact person', { req: true, auto: 'name' })}</div>
 <div class="form-row">${field('Email', 'Business email', { type: 'email', req: true, auto: 'email' })}${field('Phone', 'Phone number', { type: 'tel', req: true, auto: 'tel' })}</div>
 <div class="form-row">${field('Country', 'Country', { req: true, opts: countries })}${field('Website', 'Website', { type: 'url', ph: 'https://' })}</div>
@@ -498,7 +502,7 @@ page({
   body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Request a Quote']])}<p class="eyebrow">RFQ</p><h1 class="h1">Request a quotation.</h1><p class="lead">Add styles from the catalog, set quantities by size, and send your request. Our sales team replies with pricing, MOQ and lead time.</p></div></section>
 <section class="section--tight"><div class="wrap split" style="align-items:start">
 <div><h2 class="h3">Your quote list</h2><div data-quote-list></div><p class="empty" data-quote-empty hidden style="text-align:left;padding:28px 0">Your list is empty. <a class="link" href="/products/">Browse products</a></p></div>
-<form class="panel-form form" data-wa="Request for quotation" data-include-quote novalidate><h2 class="h3">Your details</h2>${contactFields}
+<form class="panel-form form" data-wa="Request for quotation" data-kind="rfq" data-include-quote novalidate><div class="quote-auth" data-quote-auth></div><h2 class="h3">Your details</h2>${contactFields}
 <div class="form-row">${field('Order type', 'Order type', { req: true, opts: ['Sample order', 'Bulk order', 'Private label', 'Custom design', 'Not sure yet'] })}${field('Destination', 'Delivery destination', { ph: 'City, country' })}</div>
 ${field('Requirements', 'Requirements', { type: 'textarea', ph: 'Printing, labels, packaging, target price, deadline…' })}<button class="btn" type="submit">Send request</button>${waNote}</form>
 </div></section>`,
@@ -527,7 +531,7 @@ page({
   body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Contact']])}<p class="eyebrow">Contact</p><h1 class="h1">Talk to our sales team.</h1><p class="lead">For quotations, samples, private label and wholesale accounts.</p></div></section>
 <section class="section--tight"><div class="wrap split" style="align-items:start">
 <div class="stat-plate"><dl><div><dt>WhatsApp</dt><dd><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener" style="text-decoration:underline">${site.whatsappDisplay}</a></dd></div><div><dt>Head office</dt><dd>${site.address}</dd></div><div><dt>Company</dt><dd>${site.brand}, a ${site.parent} company</dd></div><div><dt>Facebook</dt><dd><a href="https://www.facebook.com/siddiqiyatechnology" target="_blank" rel="noopener" style="text-decoration:underline">facebook.com/siddiqiyatechnology</a></dd></div></dl></div>
-<form class="panel-form form" data-wa="Website inquiry" novalidate>${contactFields}${field('Subject', 'Subject', { req: true, opts: ['Quotation', 'Samples', 'Private label', 'OEM / ODM', 'Wholesale account', 'Other'] })}${field('Message', 'Message', { type: 'textarea', req: true })}<button class="btn" type="submit">Send message</button>${waNote}</form>
+<form class="panel-form form" data-wa="Website inquiry" data-kind="contact" novalidate>${contactFields}${field('Subject', 'Subject', { req: true, opts: ['Quotation', 'Samples', 'Private label', 'OEM / ODM', 'Wholesale account', 'Other'] })}${field('Message', 'Message', { type: 'textarea', req: true })}<button class="btn" type="submit">Send message</button>${waNote}</form>
 </div></section>`,
 });
 page({
@@ -548,7 +552,7 @@ page({
 page({
   path: '/privacy/', title: 'Privacy Policy', desc: `How ${site.brand} handles information on this website.`, priority: 0.2,
   body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Privacy Policy']])}<h1 class="h1">Privacy Policy</h1><p class="muted">Last updated: November 2026</p></div></section>
-<section class="section--tight"><div class="wrap prose"><h2>What this website collects</h2><p>This website does not run user accounts and does not store form submissions on a server. When you submit a form, your details are composed into a WhatsApp message that you send yourself to our sales team.</p><h2>Information stored on your device</h2><p>Your wishlist and quote list are saved in your browser's local storage so they persist between visits. You can clear them at any time by removing items or clearing your browser data.</p><h2>Artwork files</h2><p>Files you select in the design studio are previewed in your browser only and are not uploaded to this website. You choose whether to send them to us through WhatsApp.</p><h2>Third-party services</h2><p>Fonts are loaded from Google Fonts. Messages you send are handled by WhatsApp under its own privacy policy.</p><h2>How we use your information</h2><p>Information you send us is used only to respond to your inquiry, prepare quotations and fulfil orders.</p><h2>Contact</h2><p>For privacy questions, contact us on WhatsApp at ${site.whatsappDisplay}.</p></div></section>`,
+<section class="section--tight"><div class="wrap prose"><h2>What we collect</h2><p>When you send a form — a quotation request, sample request, wholesale application, service inquiry, contact message or newsletter sign-up — we store the details you enter (such as name, company, email, phone, country and your message) so our sales team can respond and keep a record of the request.</p><h2>Buyer accounts</h2><p>If you create a buyer account, we store your email address, a securely hashed password and your company profile. Your account shows only your own quotation and sample requests. Account authentication and data storage are provided by Supabase.</p><h2>Information stored on your device</h2><p>Your wishlist and quote list are saved in your browser's local storage until you send or clear them. Signing in stores a session token in your browser so you stay signed in.</p><h2>Artwork files</h2><p>Files you select in the design studio are previewed in your browser only and are not uploaded to this website. You choose whether to send them to us through WhatsApp.</p><h2>Third-party services</h2><p>Fonts are loaded from Google Fonts. Data is stored with Supabase. If you choose to continue a conversation on WhatsApp, that message is handled by WhatsApp under its own privacy policy.</p><h2>How we use your information</h2><p>Information you send us is used only to respond to your requests, prepare quotations and samples, manage your buyer account and fulfil orders. We do not sell your data.</p><h2>Access and deletion</h2><p>You can update your profile in your buyer account. To request a copy or deletion of your data, contact us on WhatsApp at ${site.whatsappDisplay}.</p></div></section>`,
 });
 page({
   path: '/terms/', title: 'Terms & Conditions', desc: `Terms of use for the ${site.brand} website.`, priority: 0.2,
@@ -558,6 +562,55 @@ page({
 page({
   path: '/404.html', title: 'Page not found', desc: 'This page could not be found.',
   body: `<section class="section"><div class="wrap" style="text-align:center"><p class="eyebrow">404</p><h1 class="h1">This page has moved or never existed.</h1><div class="actions" style="justify-content:center"><a class="btn" href="/">Back to home</a><a class="btn btn--ghost" href="/products/">Browse products</a></div></div></section>`,
+});
+
+page({
+  path: '/products/view/', title: 'Product', desc: 'Product details.', noindex: true,
+  body: `<div class="wrap" data-live-product><div class="portal-loading" aria-live="polite">Loading product…</div></div>`,
+});
+
+/* ---------- Buyer accounts & admin (rendered by account.js / admin.js) ---------- */
+const accScript = `<script src="/assets/js/account.js?v=${VERSION}" defer></script>`;
+const authHero = (crumb, eyebrow, title, lead) => `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', crumb]])}<p class="eyebrow">${eyebrow}</p><h1 class="h1">${title}</h1>${lead ? `<p class="lead">${lead}</p>` : ''}</div></section>`;
+const pw = (name, label, auto) => { const id = `f-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`; return `<div class="field"><label for="${id}">${label} <span class="req">*</span></label><input class="input" id="${id}" name="${name}" type="password" minlength="8" autocomplete="${auto}" required><span class="err" aria-live="polite"></span></div>`; };
+page({
+  path: '/account/login/', title: 'Sign in', desc: 'Sign in to your SIDDIQIYA Apparel buyer account.', noindex: true, scripts: accScript,
+  body: `${authHero('Sign in', 'Buyer account', 'Sign in', 'Track your quotation and sample requests, and manage your wholesale profile.')}
+<section class="section--tight"><div class="wrap auth-wrap"><form class="panel-form form" data-login novalidate>
+${field('Email', 'Email', { type: 'email', req: true, auto: 'email' })}${pw('Password', 'Password', 'current-password')}
+<button class="btn btn--block" type="submit">Sign in</button><div class="auth-links"><a class="link" href="/account/reset/">Forgot password?</a><a class="link" href="/account/register/">Create a buyer account</a></div></form></div></section>`,
+});
+page({
+  path: '/account/register/', title: 'Create a Buyer Account', desc: 'Register a SIDDIQIYA Apparel buyer account and apply for wholesale pricing.', noindex: true, scripts: accScript,
+  body: `${authHero('Register', 'Buyer account', 'Create a buyer account', 'One account for quotation requests, samples and wholesale pricing. Wholesale access is activated after our team verifies your business.')}
+<section class="section--tight"><div class="wrap auth-wrap auth-wrap--wide"><form class="panel-form form" data-register novalidate>
+<h2 class="h3">Sign-in details</h2>
+${field('Email', 'Business email', { type: 'email', req: true, auto: 'email' })}<div class="form-row">${pw('Password', 'Password (min. 8 characters)', 'new-password')}${pw('Confirm password', 'Confirm password', 'new-password')}</div>
+<h2 class="h3" style="margin-top:12px">Company profile</h2>
+<div class="form-row">${field('Contact person', 'Contact person', { req: true, auto: 'name' })}${field('Company', 'Company name', { auto: 'organization' })}</div>
+<div class="form-row">${field('Phone', 'Phone / WhatsApp', { type: 'tel', auto: 'tel' })}${field('Country', 'Country', { opts: countries })}</div>
+<div class="form-row">${field('Website', 'Website', { type: 'url', ph: 'https://' })}${field('Business type', 'Business type', { opts: businessTypes })}</div>
+${field('Estimated volume', 'Estimated order volume', { opts: ['Under 500 pieces', '500–2,000 pieces', '2,000–10,000 pieces', '10,000+ pieces'] })}
+<label class="filter-check"><input type="checkbox" name="wholesale" checked> Apply for a wholesale account (company, country and business type required)</label>
+<label class="filter-check"><input type="checkbox" name="terms" required> I agree to the <a href="/terms/" style="text-decoration:underline">Terms</a> and <a href="/privacy/" style="text-decoration:underline">Privacy Policy</a></label>
+<button class="btn btn--block" type="submit">Create account</button><div class="auth-links"><span class="muted">Already registered?</span><a class="link" href="/account/login/">Sign in</a></div></form></div></section>`,
+});
+page({
+  path: '/account/reset/', title: 'Reset Password', desc: 'Reset your SIDDIQIYA Apparel account password.', noindex: true, scripts: accScript,
+  body: `${authHero('Reset password', 'Buyer account', 'Reset your password', '')}
+<section class="section--tight"><div class="wrap auth-wrap">
+<form class="panel-form form" data-recover novalidate><p class="muted" style="margin:0">Enter your account email and we will send you a link to choose a new password.</p>${field('Email', 'Email', { type: 'email', req: true, auto: 'email' })}<button class="btn btn--block" type="submit">Send reset link</button><div class="auth-links"><a class="link" href="/account/login/">Back to sign in</a></div></form>
+<form class="panel-form form" data-newpass hidden novalidate><p class="muted" style="margin:0">Choose a new password for your account.</p><div class="form-row">${pw('Password', 'New password', 'new-password')}${pw('Confirm password', 'Confirm password', 'new-password')}</div><button class="btn btn--block" type="submit">Save new password</button></form>
+</div></section>`,
+});
+page({
+  path: '/account/', title: 'Buyer Account', desc: 'Your SIDDIQIYA Apparel buyer portal.', noindex: true, scripts: accScript,
+  body: `<section class="page-hero portal-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Buyer account']])}<p class="eyebrow">Buyer portal</p><h1 class="h1" data-portal-title>Your account</h1><p class="lead" data-portal-lead>Loading your account…</p></div></section>
+<section class="section--tight"><div class="wrap" data-portal><div class="portal-loading" aria-live="polite">Loading…</div></div></section>`,
+});
+page({
+  path: '/admin/', title: 'Admin', desc: 'SIDDIQIYA Apparel administration.', noindex: true, scripts: `<script src="/assets/js/admin.js?v=${VERSION}" defer></script>`,
+  body: `<section class="admin-shell" data-admin><div class="wrap"><div class="portal-loading" aria-live="polite">Loading…</div></div></section>`,
 });
 
 /* ---------- Data for scripts, SEO files ---------- */
@@ -570,7 +623,7 @@ const data = {
 };
 out('assets/js/data.js', `window.SA=${JSON.stringify(data)};`);
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(([p, pr]) => `<url><loc>${site.domain}${p}</loc><priority>${pr}</priority></url>`).join('\n')}\n</urlset>\n`);
-out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /src/\nSitemap: ${site.domain}/sitemap.xml\n`);
+out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /src/\nDisallow: /account/\nDisallow: /admin/\nSitemap: ${site.domain}/sitemap.xml\n`);
 out('.nojekyll', '');
 out('assets/js/mockup.mjs', '// Generated from src/mockup.mjs — do not edit.\n' + fs.readFileSync(path.join(ROOT, 'src/mockup.mjs'), 'utf8'));
 out('assets/js/art.mjs', '// Generated from src/art.mjs — do not edit.\n' + fs.readFileSync(path.join(ROOT, 'src/art.mjs'), 'utf8'));

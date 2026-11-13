@@ -1,13 +1,15 @@
 /* SIDDIQIYA Apparel — site behaviour (no dependencies) */
 (function () {
   'use strict';
+  var rpcArg = function (o) { return { p: o }; };
   var SA = window.SA || { products: [], colors: {}, fabrics: [], categories: [] };
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var byId = {};
   SA.products.forEach(function (p) { byId[p.id] = p; });
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var img = function (p, c, v) { return '/assets/img/p/' + p.slug + '-' + c + '-' + (v || 'front') + '.svg'; };
+  var img = function (p, c, v) { return p.live && window.SA_liveImg ? window.SA_liveImg(p, c, v) : '/assets/img/p/' + p.slug + '-' + c + '-' + (v || 'front') + '.svg'; };
+  var pHref = function (p) { return p.live ? '/products/view/?id=' + encodeURIComponent(p.id) : '/products/' + p.slug + '/'; };
 
   /* ---------- storage ---------- */
   function load(k) { try { return JSON.parse(localStorage.getItem(k)) || []; } catch (e) { return []; } }
@@ -59,13 +61,6 @@
     var w = window.open(url, '_blank', 'noopener');
     if (!w) window.location.href = url;
   }
-  function quoteLines() {
-    return load(QUOTE).map(function (it, i) {
-      var p = byId[it.id]; if (!p) return '';
-      var sz = Object.keys(it.sizes || {}).filter(function (s) { return it.sizes[s] > 0; }).map(function (s) { return s + ' ' + it.sizes[s]; }).join(', ');
-      return (i + 1) + '. ' + p.name + ' [' + p.id + '] — ' + SA.colors[it.color].name + ', ' + p.fabricName + ' ' + p.gsm + ' GSM' + (sz ? ' — sizes: ' + sz : ' — quantities to discuss');
-    }).filter(Boolean);
-  }
   function labelFor(el) {
     if (el.getAttribute('data-label')) return el.getAttribute('data-label');
     var l = el.id ? document.querySelector('label[for="' + el.id + '"]') : null;
@@ -90,27 +85,98 @@
     if (first) first.focus();
     return ok;
   }
-  function collect(form) {
-    var lines = [];
-    $$('input, select, textarea', form).forEach(function (el) {
-      if (!el.name || el.type === 'file' || el.type === 'checkbox' || el.type === 'radio') return;
-      var v = el.value.trim(); if (!v) return;
-      lines.push(labelFor(el) + ': ' + v);
+  function fieldValue(el) {
+    if (el.tagName === 'SELECT') return el.value ? el.options[el.selectedIndex].text.trim() : '';
+    return el.value.trim();
+  }
+  function fields(form) {
+    return $$('input, select, textarea', form).filter(function (el) {
+      return el.name && ['file', 'checkbox', 'radio', 'password', 'hidden'].indexOf(el.type) === -1 && fieldValue(el);
     });
-    return lines;
+  }
+  function collect(form) {
+    return fields(form).map(function (el) { return labelFor(el) + ': ' + fieldValue(el); });
+  }
+  function waUrl(text) { return 'https://wa.me/' + SA.wa + '?text=' + encodeURIComponent(text); }
+
+  /* ---------- saving requests to the database ---------- */
+  function inquiryPayload(form, kind, extra) {
+    var map = {};
+    fields(form).forEach(function (el) { map[el.name.toLowerCase()] = { label: labelFor(el), value: fieldValue(el) }; });
+    var pick = function () { for (var i = 0; i < arguments.length; i++) { if (map[arguments[i]]) return map[arguments[i]].value; } return ''; };
+    var details = {};
+    Object.keys(map).forEach(function (k) { details[map[k].label] = map[k].value; });
+    Object.keys(extra || {}).forEach(function (k) { details[k] = extra[k]; });
+    return {
+      kind: kind, subject: form.getAttribute('data-wa'),
+      contact_name: pick('contact person', 'name'), email: pick('email'), company: pick('company'),
+      country: pick('country'), phone: pick('phone'),
+      message: pick('details', 'message', 'requirements', 'instructions', 'notes', 'delivery address', 'shipping address'),
+      details: details,
+    };
+  }
+  async function saveForm(form, extra) {
+    if (!window.SB) throw new Error('Saving is unavailable right now.');
+    var sample = form.getAttribute('data-sample');
+    if (sample && SB.user()) {
+      var parts = sample.split(':');
+      var get = function (n) { var el = form.querySelector('[name="' + n + '"]'); return el ? el.value.trim() : ''; };
+      var sp = parts[0] === 'product'
+        ? { kind: 'product', product_id: parts[1], color: get('Sample colour'), size: get('Sample size'), delivery_address: get('Delivery address'), notes: get('Notes') }
+        : { kind: 'fabric', fabric: parts[1], gsm: get('GSM'), color: get('Colours'), delivery_address: get('Shipping address'), notes: get('Notes') };
+      try {
+        var r = await SB.rpc('apparel_request_sample', rpcArg(sp));
+        return { code: r.code, tracked: true };
+      } catch (e) {
+        if (['PROFILE_REQUIRED', 'NOT_AUTHENTICATED'].indexOf(e.code) === -1) throw e;
+      }
+    }
+    var r2 = await SB.rpc('apparel_submit_inquiry', rpcArg(inquiryPayload(form, form.getAttribute('data-kind') || 'contact', extra)));
+    return { code: r2.code, tracked: false };
+  }
+  function showDone(form, res, waText) {
+    var d = document.createElement('div');
+    d.className = 'form-done';
+    d.setAttribute('role', 'status');
+    d.setAttribute('tabindex', '-1');
+    var track = res.tracked
+      ? 'Follow its status in your <a href="/account/">buyer account</a>.'
+      : (SB.user() ? 'Our team will reply by email or WhatsApp.' : 'Our team will reply by email or WhatsApp. <a href="/account/register/">Create a buyer account</a> to track requests online.');
+    d.innerHTML = '<p class="eyebrow">Request received</p><p class="form-done-code">Reference <b>' + esc(res.code) + '</b></p><p>' + track + '</p>' +
+      '<div class="actions"><a class="btn btn--ghost btn--sm" target="_blank" rel="noopener" href="' + waUrl(waText + '\nReference: ' + res.code) + '">Also message us on WhatsApp</a>' +
+      '<button type="button" class="btn btn--ghost btn--sm" data-again>Send another request</button></div>';
+    form.hidden = true;
+    form.parentNode.insertBefore(d, form.nextSibling);
+    d.querySelector('[data-again]').addEventListener('click', function () { d.remove(); form.reset(); form.hidden = false; });
+    d.focus({ preventScroll: true });
+    d.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function showError(form, err, waText) {
+    var box = form.querySelector('.form-error');
+    if (!box) { box = document.createElement('div'); box.className = 'form-error'; box.setAttribute('role', 'alert'); form.appendChild(box); }
+    box.innerHTML = '<p>' + esc(SB ? SB.message(err) : err.message) + '</p><a class="link" target="_blank" rel="noopener" href="' + waUrl(waText) + '">Send it on WhatsApp instead</a>';
+  }
+  function busy(form, on) {
+    var b = form.querySelector('[type="submit"]');
+    if (!b) return;
+    if (on) { b.dataset.label = b.textContent; b.textContent = 'Sending…'; b.disabled = true; }
+    else { b.textContent = b.dataset.label || b.textContent; b.disabled = false; }
   }
   $$('form[data-wa]').forEach(function (form) {
-    form.addEventListener('submit', function (e) {
+    if (form.hasAttribute('data-include-quote')) return; // handled by the quote page
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
       if (!validate(form)) return;
-      var lines = ['*' + form.getAttribute('data-wa') + '* — via app.hsdmj.com', ''].concat(collect(form));
-      if (form.hasAttribute('data-include-quote')) {
-        var q = quoteLines();
-        lines.push('', '*Quote list*');
-        lines = lines.concat(q.length ? q : ['(No styles added — general inquiry)']);
-      }
-      openWhatsApp(lines.join('\n'));
-      toast('WhatsApp opened with your message — press send to deliver it.');
+      var old = form.querySelector('.form-error'); if (old) old.remove();
+      var waText = ['*' + form.getAttribute('data-wa') + '* — via app.hsdmj.com', ''].concat(collect(form)).join('\n');
+      busy(form, true);
+      try {
+        var res = await saveForm(form);
+        if (form.hasAttribute('data-compact')) { form.reset(); toast('Thank you — you are on the list (' + res.code + ').'); }
+        else showDone(form, res, waText);
+      } catch (err) {
+        showError(form, err, waText);
+      } finally { busy(form, false); }
     });
   });
 
@@ -152,10 +218,10 @@
   /* ---------- cards ---------- */
   function cardHTML(p) {
     var c0 = p.colors[0];
-    return '<article class="card in" data-id="' + p.id + '"><a class="card-media" href="/products/' + p.slug + '/" aria-label="' + esc(p.name) + '"><img class="main" src="' + img(p, c0) + '" alt="' + esc(p.name) + '" width="400" height="440" loading="lazy"><img class="alt" src="' + img(p, c0, 'back') + '" alt="" width="400" height="440" loading="lazy"><span class="card-badge">' + p.gsm + ' GSM</span></a>' +
+    return '<article class="card in" data-id="' + p.id + '"><a class="card-media" href="' + pHref(p) + '" aria-label="' + esc(p.name) + '"><img class="main" src="' + img(p, c0) + '" alt="' + esc(p.name) + '" width="400" height="440" loading="lazy"><img class="alt" src="' + img(p, c0, 'back') + '" alt="" width="400" height="440" loading="lazy"><span class="card-badge">' + p.gsm + ' GSM</span></a>' +
       '<button class="icon-btn card-wish" data-wish="' + p.id + '" aria-pressed="false" aria-label="Save ' + esc(p.name) + ' to wishlist"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button>' +
       '<div class="card-quick"><button class="btn btn--sm" data-quick="' + p.id + '">Quick view</button></div>' +
-      '<div class="card-body"><a class="card-title" href="/products/' + p.slug + '/">' + esc(p.name) + '</a><span class="card-spec">' + esc(p.fabricName) + ' · ' + p.gsm + ' GSM</span><span class="card-comp">' + esc(p.comp) + '</span><div class="swatches">' + p.colors.map(function (c) { return '<span class="sw" style="background:' + SA.colors[c].hex + '" title="' + SA.colors[c].name + '"></span>'; }).join('') + '</div><span class="sizes">' + p.fit + ' fit · ' + p.sizes[0] + '–' + p.sizes[p.sizes.length - 1] + '</span>' +
+      '<div class="card-body"><a class="card-title" href="' + pHref(p) + '">' + esc(p.name) + '</a><span class="card-spec">' + esc(p.fabricName) + ' · ' + p.gsm + ' GSM</span><span class="card-comp">' + esc(p.comp) + '</span><div class="swatches">' + p.colors.map(function (c) { return '<span class="sw" style="background:' + SA.colors[c].hex + '" title="' + SA.colors[c].name + '"></span>'; }).join('') + '</div><span class="sizes">' + p.fit + ' fit · ' + p.sizes[0] + '–' + p.sizes[p.sizes.length - 1] + '</span>' +
       '<div class="card-foot"><span class="price">Price &amp; MOQ on request</span><button data-add="' + p.id + '" aria-label="Request a quote for ' + esc(p.name) + '">Request quote +</button></div></div></article>';
   }
 
@@ -184,7 +250,7 @@
     $('.body', modal).innerHTML = '<span class="pdp-id">' + p.id + ' · ' + esc(p.catName) + '</span><h2 class="h2" style="font-size:34px;margin:10px 0 12px">' + esc(p.name) + '</h2><p class="muted">' + esc(p.desc) + '</p>' +
       '<dl class="specs"><div><dt>Fabric</dt><dd>' + esc(p.fabricName) + '</dd></div><div><dt>Weight</dt><dd>' + p.gsm + ' GSM</dd></div><div><dt>Fit</dt><dd>' + p.fit + '</dd></div><div><dt>Sizes</dt><dd>' + p.sizes.join(' · ') + '</dd></div><div><dt>Price</dt><dd>On request</dd></div></dl>' +
       '<div class="opts" style="margin:20px 0" data-qv-colors>' + p.colors.map(function (k, i) { return '<button class="color-btn" type="button" aria-pressed="' + (i === 0) + '" data-qv-color="' + k + '" aria-label="' + SA.colors[k].name + '" title="' + SA.colors[k].name + '" style="background:' + SA.colors[k].hex + '"></button>'; }).join('') + '</div>' +
-      '<div class="actions" style="margin-top:8px"><button class="btn" data-add="' + p.id + '" data-color="' + c + '">Add to quote</button><a class="btn btn--ghost" href="/products/' + p.slug + '/">Full details</a></div>';
+      '<div class="actions" style="margin-top:8px"><button class="btn" data-add="' + p.id + '" data-color="' + c + '">Add to quote</button><a class="btn btn--ghost" href="' + pHref(p) + '">Full details</a></div>';
     $$('[data-qv-color]', modal).forEach(function (b) {
       b.addEventListener('click', function () {
         var k = b.getAttribute('data-qv-color');
@@ -214,7 +280,7 @@
         current = b.getAttribute('data-color');
         $$('.color-btn', pdp).forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
         $('[data-color-name]').textContent = SA.colors[current].name;
-        ['front', 'back', 'neck'].forEach(function (v) { $('[data-view="' + v + '"]').src = img(P, current, v); });
+        ['front', 'back', 'side', 'neck'].forEach(function (v) { $('[data-view="' + v + '"]').src = img(P, current, v); });
         $('[data-view="fabric"]').src = '/assets/img/f/' + P.fabric + '-' + current + '.svg';
       });
     });
@@ -239,6 +305,7 @@
   if (cat && filters) {
     var cards = $$('.card', cat);
     var order = cards.slice();
+    cat.addEventListener('catalog:updated', function () { cards = $$('.card', cat); order = cards.slice(); apply(); });
     var params = new URLSearchParams(location.search);
     ['cat', 'fabric', 'gsm', 'fit', 'color'].forEach(function (k) {
       params.getAll(k).forEach(function (v) { var i = $('input[name="' + k + '"][value="' + v + '"]', filters); if (i) i.checked = true; });
@@ -275,30 +342,124 @@
 
   /* ---------- quote list page ---------- */
   var ql = $('[data-quote-list]');
+  var fabBy = {};
+  SA.fabrics.forEach(function (f) { fabBy[f.slug] = f; });
+  function itemDefaults(it) {
+    var p = byId[it.id];
+    if (!it.fabric || !fabBy[it.fabric]) it.fabric = p.fabric;
+    if (!it.gsm || fabBy[it.fabric].gsm.indexOf(+it.gsm) === -1) it.gsm = fabBy[it.fabric].gsm.indexOf(p.gsm) > -1 ? p.gsm : fabBy[it.fabric].gsm[0];
+    if (p.colors.indexOf(it.color) === -1) it.color = p.colors[0];
+    it.sizes = it.sizes || {};
+    return it;
+  }
+  function opt(v, t, sel) { return '<option value="' + esc(v) + '"' + (sel ? ' selected' : '') + '>' + esc(t) + '</option>'; }
   function renderQuote() {
     if (!ql) return;
-    var list = load(QUOTE);
+    var all = load(QUOTE);
+    all.forEach(function (it) { if (byId[it.id]) itemDefaults(it); });
+    save(QUOTE, all);
+    var list = all;
     $('[data-quote-empty]').hidden = list.length > 0;
     ql.innerHTML = list.map(function (it, idx) {
-      var p = byId[it.id]; if (!p) return '';
-      return '<div class="q-item"><a class="thumb" href="/products/' + p.slug + '/"><img src="' + img(p, it.color) + '" alt="' + esc(p.name) + '" width="400" height="440" loading="lazy"></a><div><a class="card-title" href="/products/' + p.slug + '/">' + esc(p.name) + '</a><div class="card-spec">' + p.id + ' · ' + SA.colors[it.color].name + ' · ' + esc(p.fabricName) + ' ' + p.gsm + ' GSM</div>' +
-        '<div class="size-grid">' + p.sizes.map(function (s) { return '<label>' + s + '<input class="input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" data-q="' + idx + '" data-s="' + s + '" value="' + (it.sizes[s] || '') + '"></label>'; }).join('') + '</div></div>' +
+      var p = byId[it.id];
+      if (!p) return '<div class="q-item q-pending"><div></div><div class="q-body"><span class="card-title">' + esc(it.id) + '</span><p class="hint">Loading product details…</p></div><button class="q-remove" data-q-remove="' + idx + '">Remove</button></div>';
+      var f = fabBy[it.fabric];
+      var total = Object.keys(it.sizes).reduce(function (n, k) { return n + (+it.sizes[k] || 0); }, 0);
+      return '<div class="q-item"><a class="thumb" href="' + pHref(p) + '"><img src="' + img(p, it.color) + '" alt="' + esc(p.name) + '" width="400" height="440" loading="lazy" data-q-img="' + idx + '"></a><div class="q-body"><a class="card-title" href="' + pHref(p) + '">' + esc(p.name) + '</a><div class="card-spec">' + p.id + ' · ' + esc(p.fit) + ' fit</div>' +
+        '<div class="q-specs">' +
+        '<label>Colour<select class="input" data-q="' + idx + '" data-qf="color">' + p.colors.map(function (c) { return opt(c, SA.colors[c].name, c === it.color); }).join('') + '</select></label>' +
+        '<label>Fabric<select class="input" data-q="' + idx + '" data-qf="fabric">' + SA.fabrics.map(function (x) { return opt(x.slug, x.name, x.slug === it.fabric); }).join('') + '</select></label>' +
+        '<label>GSM<select class="input" data-q="' + idx + '" data-qf="gsm">' + f.gsm.map(function (g) { return opt(g, g + ' GSM', +g === +it.gsm); }).join('') + '</select></label></div>' +
+        '<div class="size-grid">' + p.sizes.map(function (s) { return '<label>' + s + '<input class="input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" data-q="' + idx + '" data-s="' + s + '" value="' + (it.sizes[s] || '') + '"></label>'; }).join('') + '</div>' +
+        '<label class="q-note">Note for this item<input class="input" maxlength="300" data-q="' + idx + '" data-qf="note" value="' + esc(it.note || '') + '" placeholder="Print, label or packaging details"></label>' +
+        '<p class="hint" data-q-total="' + idx + '">' + (total ? total.toLocaleString() + ' pieces' : 'Quantities to discuss') + '</p></div>' +
         '<button class="q-remove" data-q-remove="' + idx + '">Remove</button></div>';
     }).join('');
+  }
+  function quoteItems() {
+    return load(QUOTE).filter(function (it) { return byId[it.id]; }).map(function (it) {
+      var sizes = {};
+      Object.keys(it.sizes || {}).forEach(function (k) { if (+it.sizes[k] > 0) sizes[k] = +it.sizes[k]; });
+      return { product_id: it.id, color: it.color, fabric: it.fabric || byId[it.id].fabric, gsm: +(it.gsm || byId[it.id].gsm), sizes: sizes, note: it.note || '' };
+    });
+  }
+  function quoteLines() {
+    return quoteItems().map(function (it, i) {
+      var p = byId[it.product_id];
+      var sz = Object.keys(it.sizes).map(function (s) { return s + ' ' + it.sizes[s]; }).join(', ');
+      return (i + 1) + '. ' + p.name + ' [' + p.id + '] — ' + SA.colors[it.color].name + ', ' + (fabBy[it.fabric] ? fabBy[it.fabric].name : it.fabric) + ' ' + it.gsm + ' GSM' + (sz ? ' — sizes: ' + sz : ' — quantities to discuss') + (it.note ? ' — ' + it.note : '');
+    });
   }
   if (ql) {
     renderQuote();
     ql.addEventListener('input', function (e) {
       var i = e.target.getAttribute('data-q'); if (i === null) return;
-      var list = load(QUOTE), v = e.target.value.trim();
-      if (v && !/^\d+$/.test(v)) { e.target.setAttribute('aria-invalid', 'true'); return; }
-      e.target.setAttribute('aria-invalid', 'false');
-      list[i].sizes[e.target.getAttribute('data-s')] = v ? +v : 0;
+      var list = load(QUOTE), it = list[i];
+      if (!it) return;
+      var s = e.target.getAttribute('data-s'), f = e.target.getAttribute('data-qf');
+      if (s) {
+        var v = e.target.value.trim();
+        if (v && !/^\d+$/.test(v)) { e.target.setAttribute('aria-invalid', 'true'); return; }
+        e.target.setAttribute('aria-invalid', 'false');
+        it.sizes[s] = v ? +v : 0;
+        var total = Object.keys(it.sizes).reduce(function (n, k) { return n + (+it.sizes[k] || 0); }, 0);
+        $('[data-q-total="' + i + '"]').textContent = total ? total.toLocaleString() + ' pieces' : 'Quantities to discuss';
+      } else if (f === 'note') { it.note = e.target.value.slice(0, 300); }
       save(QUOTE, list);
+    });
+    ql.addEventListener('change', function (e) {
+      var i = e.target.getAttribute('data-q'), f = e.target.getAttribute('data-qf');
+      if (i === null || !f || f === 'note') return;
+      var list = load(QUOTE), it = list[i];
+      it[f] = f === 'gsm' ? +e.target.value : e.target.value;
+      if (f === 'fabric') it.gsm = 0;
+      save(QUOTE, list);
+      renderQuote();
     });
     ql.addEventListener('click', function (e) {
       var i = e.target.getAttribute('data-q-remove'); if (i === null) return;
       var list = load(QUOTE); list.splice(+i, 1); save(QUOTE, list); renderQuote(); updateCounts();
+    });
+
+    var qform = $('form[data-include-quote]');
+    var authBox = $('[data-quote-auth]');
+    var me = null;
+    if (window.SB && SB.user()) {
+      authBox.innerHTML = '<p>Signed in as <b>' + esc(SB.user().email) + '</b>. This request will appear in your <a href="/account/">buyer account</a> with its status.</p>';
+      SB.rpc('apparel_me').then(function (m) {
+        me = m;
+        var b = m && m.buyer;
+        if (!b) { authBox.innerHTML += '<p><a class="link" href="/account/?tab=profile">Complete your buyer profile</a> before sending a tracked request.</p>'; return; }
+        var set = function (n, v) { var el = qform.querySelector('[name="' + n + '"]'); if (el && v && !el.value) { if (el.tagName === 'SELECT') { [].forEach.call(el.options, function (o) { if (o.text === v) el.value = o.value || o.text; }); } else el.value = v; } };
+        set('Contact person', b.contact_person); set('Company', b.company_name); set('Email', m.email); set('Phone', b.phone); set('Country', b.country); set('Business type', b.business_type);
+      }).catch(function () { /* the form still works as a guest request */ });
+    } else if (authBox) {
+      authBox.innerHTML = '<p><a href="/account/login/?next=/quote/">Sign in</a> or <a href="/account/register/">create a buyer account</a> to track this request, or send it as a guest below.</p>';
+    }
+    qform.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!validate(qform)) return;
+      var old = qform.querySelector('.form-error'); if (old) old.remove();
+      var items = quoteItems();
+      var lines = quoteLines();
+      var waText = ['*Request for quotation* — via app.hsdmj.com', ''].concat(collect(qform), ['', '*Quote list*'], lines.length ? lines : ['(No styles added — general inquiry)']).join('\n');
+      var get = function (n) { var el = qform.querySelector('[name="' + n + '"]'); return el ? fieldValue(el) : ''; };
+      busy(qform, true);
+      try {
+        var res;
+        if (window.SB && SB.user() && me && me.buyer && items.length) {
+          var contact = ['Contact: ' + get('Contact person'), get('Company') && 'Company: ' + get('Company'), get('Phone') && 'Phone: ' + get('Phone')].filter(Boolean).join(' · ');
+          var r = await SB.rpc('apparel_submit_rfq', rpcArg({ order_type: get('Order type'), destination: get('Destination'), requirements: [get('Requirements'), contact].filter(Boolean).join('\n\n'), items: items }));
+          res = { code: r.code, tracked: true };
+        } else {
+          var r2 = await SB.rpc('apparel_submit_inquiry', rpcArg(inquiryPayload(qform, 'rfq', { Items: lines.length ? lines.join('\n') : 'General inquiry — no styles selected' })));
+          res = { code: r2.code, tracked: false };
+        }
+        save(QUOTE, []); renderQuote(); updateCounts();
+        showDone(qform, res, waText);
+      } catch (err) {
+        showError(qform, err, waText);
+      } finally { busy(qform, false); }
     });
   }
 
@@ -327,6 +488,12 @@
     $('[data-search-fabrics]').innerHTML = fs.length ? '<h2 class="h3" style="margin-bottom:18px">Fabrics</h2><div class="fab-grid">' + fs.map(function (f) { return '<a class="fab" href="/fabrics/' + f.slug + '/"><div class="fab-img"><img src="/assets/img/f/' + f.slug + '-' + f.color + '.svg" alt="" loading="lazy"></div><div class="fab-body"><h3 class="h3">' + esc(f.name) + '</h3><p>' + esc(f.composition) + '</p></div></a>'; }).join('') + '</div>' : '';
   }
 
+  document.addEventListener('sa:live', function () {
+    SA.products.forEach(function (p) { byId[p.id] = p; });
+    if (ql) renderQuote();
+    if (wg) renderWishlist();
+    updateCounts();
+  });
   updateCounts();
-  window.SAStore = { load: load, save: save, toast: toast, openWhatsApp: openWhatsApp, validate: validate, collect: collect };
+  window.SAStore = { load: load, save: save, toast: toast, openWhatsApp: openWhatsApp, validate: validate, collect: collect, waUrl: waUrl, showDone: showDone, showError: showError, busy: busy, inquiryPayload: inquiryPayload, esc: esc, byId: byId, updateCounts: updateCounts };
 })();

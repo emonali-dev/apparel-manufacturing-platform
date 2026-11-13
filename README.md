@@ -13,9 +13,23 @@ A static site served by GitHub Pages from this repository's `main` branch.
 - Quote list and wishlist (saved in the visitor's browser), search, size guide, shipping, FAQ, privacy, terms
 - SEO: meta tags, Open Graph, JSON-LD, `sitemap.xml`, `robots.txt`
 
-### How forms work today
-There is no backend yet. Every form validates input in the browser and opens WhatsApp
-(+855 96 733 5609) with the request pre-filled; the visitor presses send. Nothing is stored on a server.
+### Backend (Supabase)
+Buyer accounts, requests and the admin dashboard use the Supabase project `ketzuhfolwhofrnliirf`
+(shared with other SIDDIQIYA apps; every object here is prefixed `apparel_`). Schema and functions are in
+`supabase/migrations/`. Tables have row-level security with no direct access — the browser can only call
+the `apparel_*` SECURITY DEFINER functions, which check the signed-in user, validate input and rate-limit.
+
+- **Forms**: every form (contact, service, wholesale, samples, studio, RFQ, newsletter) is saved to the
+  database and returns a reference number; WhatsApp (+855 96 733 5609) is offered as a follow-up/fallback.
+- **Buyers** (`/account/`): register, sign in, reset password, company profile, wholesale application,
+  consolidated RFQs (multiple products with colour, fabric, GSM and size quantities), sample requests,
+  status history and messages from the sales team.
+- **Admin** (`/admin/`): overview counts, quotations, orders, samples (courier + tracking), inquiries,
+  buyer verification, and products / fabrics / collections management. Admins are listed in
+  `apparel_admins`. Catalog changes show on the public site immediately (`assets/js/live.mjs`);
+  products added in the admin get a page at `/products/view/?id=…` until the next build.
+- **Notifications**: new requests appear as badges in the admin dashboard. Email notifications are not
+  set up (they need an email provider such as Resend).
 
 ### What is intentionally not shown
 Prices, MOQs and lead times are "on request" — they are never invented. Product images are
@@ -27,10 +41,10 @@ Garment and fabric illustrations come from `src/art.mjs`; studio mockup template
 
 ```bash
 node src/build.mjs      # regenerates every page, image, sitemap and data file
+node src/seed-sql.mjs   # prints SQL that seeds the database catalog from src/data.mjs
 python3 -m http.server  # preview at http://localhost:8000
 ```
 Commit the generated files together with the source changes.
 
 ## Next milestones
-See the architecture plan: buyer accounts, admin, factory, export and finance need a server and
-PostgreSQL (planned on Vercel + Supabase), which replaces the WhatsApp-only forms.
+Factory/production, inventory, export documents and finance modules from the architecture plan.
