@@ -71,7 +71,7 @@ const featureIcons = {
 
 /* ---------- Layout ---------- */
 const navItems = [
-  ['/', 'Home'], ['/collections/', 'Collections'], ['/products/', 'Products'], ['/fabrics/', 'Fabrics'],
+  ['/', 'Home'], ['/collections/', 'Collections'], ['/products/', 'Products'], ['/fabrics/', 'Fabrics'], ['/premium-fabric-standard/', 'Fabric Standards'],
   ['/custom-design/', 'Custom Design'], ['/manufacturing/', 'Manufacturing'], ['/wholesale/', 'Wholesale'], ['/about/', 'About Us'], ['/contact/', 'Contact'],
 ];
 const isActive = (href, p) => (href === '/' ? p === '/' : p.startsWith(href));
@@ -123,7 +123,7 @@ function footer() {
 </div>
 <div><h4>Products</h4><ul>${categories.slice(0, 7).map((c) => `<li><a href="/categories/${c.slug}/">${c.name}</a></li>`).join('')}<li><a href="/products/">All products</a></li></ul></div>
 <div><h4>Manufacturing</h4><ul><li><a href="/manufacturing/oem-manufacturing/">OEM Manufacturing</a></li><li><a href="/manufacturing/odm-manufacturing/">ODM Manufacturing</a></li><li><a href="/manufacturing/private-label-production/">Private Label</a></li><li><a href="/manufacturing/screen-printing/">Screen Printing</a></li><li><a href="/printing-embroidery/">Printing &amp; embroidery</a></li><li><a href="/custom-design/">Custom Design Studio</a></li><li><a href="/manufacturing/">All services</a></li></ul></div>
-<div><h4>Buyer resources</h4><ul><li><a href="/wholesale/">Wholesale programme</a></li><li><a href="/fabrics/">Fabric library</a></li><li><a href="/size-guide/">Size guide</a></li><li><a href="/how-it-works/">How it works</a></li><li><a href="/quality-control/">Quality control</a></li><li><a href="/shipping/">Shipping &amp; export</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/quote/">Request a quote</a></li></ul></div>
+<div><h4>Buyer resources</h4><ul><li><a href="/wholesale/">Wholesale programme</a></li><li><a href="/fabrics/">Fabric library</a></li><li><a href="/premium-fabric-standard/">Premium Fabric Standards</a></li><li><a href="/size-guide/">Size guide</a></li><li><a href="/how-it-works/">How it works</a></li><li><a href="/quality-control/">Quality control</a></li><li><a href="/shipping/">Shipping &amp; export</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/quote/">Request a quote</a></li></ul></div>
 <div><h4>Contact</h4><ul><li>${site.address}</li><li><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">WhatsApp ${site.whatsappDisplay}</a></li><li><a href="/contact/">Contact form</a></li></ul></div>
 </div>
 <div class="footer-bottom"><span>© ${new Date().getFullYear()} ${site.brand}. All rights reserved.</span><nav aria-label="Legal"><a href="/privacy/">Privacy Policy</a><a href="/terms/">Terms &amp; Conditions</a><a href="/shipping-policy/">Shipping Policy</a><a href="/refund-policy/">Refund Policy</a></nav></div>
@@ -226,7 +226,7 @@ const contactFields = `<div class="form-row">${field('Contact person', 'Contact 
 <div class="grid">${featuredList.map(card).join('')}</div></div></section>
 
 <section class="section"><div class="wrap">${head('Fabric excellence', 'It starts with the cloth.', 'Nine fabrics from 140 to 320 GSM. Request physical swatches before you commit to a programme.', `<a class="link" href="/fabrics/">Fabric library ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
-<div class="scroller">${showFabrics.map((s) => { const f = fabBy[s]; return `<a class="swatch-tile rv" href="/fabrics/${f.slug}/"><img src="${fimg(f.slug, f.colors[0])}" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><span class="cap"><span>${f.gsm[0]}–${f.gsm.at(-1)} GSM</span><b>${f.name}</b></span></a>`; }).join('')}</div></div></section>
+<div class="scroller">${showFabrics.map((s) => { const f = fabBy[s]; return `<a class="swatch-tile rv" href="/fabrics/${f.slug}/"><img src="${fimg(f.slug, f.colors[0])}" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><span class="cap"><span>${f.gsm[0]}–${f.gsm.at(-1)} GSM</span><b>${f.name}</b></span></a>`; }).join('')}</div><p class="lead" style="margin-top:24px">Need exact fabric specifications and quality targets? <a class="link" href="/premium-fabric-standard/">View Premium Fabric Technical Standards ${I.arrow}</a></p></div></section>
 
 <section class="section section--dark"><div class="wrap">${head('Custom manufacturing', 'Your design. Our manufacturing expertise.', 'Three ways to work with us, depending on how much of the product you bring.')}
 <div class="cols-3 rv">
