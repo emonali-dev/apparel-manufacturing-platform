@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 440" role="img"><defs>
+<linearGradient id="al" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".16"/><stop offset=".22" stop-color="#000" stop-opacity=".02"/><stop offset=".5" stop-color="#fff" stop-opacity=".07"/><stop offset=".78" stop-color="#000" stop-opacity=".03"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
+<linearGradient id="av" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".06"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
+<filter id="an" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .09 0"/></filter>
+<filter id="as" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#2a2014" flood-opacity=".22"/></filter>
+<clipPath id="ac"><path d="M158 52 C170 82 230 82 242 52 L300 70 Q318 76 330 92 L372 168 Q376 176 368 180 L326 200 Q318 204 314 196 L286 150 L288 404 Q288 412 280 412 L120 412 Q112 412 112 404 L114 150 L86 196 Q82 204 74 200 L32 180 Q24 176 28 168 L70 92 Q82 76 100 70 Z"/></clipPath></defs>
+<g filter="url(#as)"><path d="M158 52 C170 82 230 82 242 52 L300 70 Q318 76 330 92 L372 168 Q376 176 368 180 L326 200 Q318 204 314 196 L286 150 L288 404 Q288 412 280 412 L120 412 Q112 412 112 404 L114 150 L86 196 Q82 204 74 200 L32 180 Q24 176 28 168 L70 92 Q82 76 100 70 Z" fill="#f5f3ef"/></g>
+<g clip-path="url(#ac)">
+<rect width="400" height="440" fill="url(#al)"/><rect width="400" height="440" fill="url(#av)"/>
+
+<rect width="400" height="440" filter="url(#an)"/>
+<g fill="none" stroke="rgba(0,0,0,.16)" stroke-width="1.1" stroke-dasharray="3 3"><path d="M38 166 L80 188"/><path d="M362 166 L320 188"/><path d="M114 398 L286 398"/></g>
+<g fill="none" stroke="rgba(0,0,0,.16)" stroke-width="1.2"></g>
+<g style="mix-blend-mode:multiply" opacity=".92"><g><circle cx="240" cy="160" r="13" fill="none" stroke="#1a1a1a" stroke-width="2.4"/><text x="240" y="165" text-anchor="middle" font-family="Playfair Display, Georgia, serif" font-weight="700" font-size="15" fill="#1a1a1a">S</text></g></g>
+</g><path d="M158 52 C172 72 228 72 242 52 C226 44 174 44 158 52 Z" fill="#bfbeba"/><path d="M158 52 C170 84 230 84 242 52 C228 72 172 72 158 52 Z" fill="#e6e4e1"/><path d="M158 52 C170 84 230 84 242 52 C228 72 172 72 158 52 Z" fill="none" stroke="rgba(0,0,0,.16)" stroke-width="1"/><rect x="192" y="55" width="16" height="8" rx="1" fill="#2a2a2a" opacity=".85"/></svg>
