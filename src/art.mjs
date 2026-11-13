@@ -92,9 +92,24 @@ export function teeSVG({ shape = 'crew', color = '#e7dfd0', view = 'front', prin
     const tint = shade(color, light ? -0.1 : 0.12);
     details += `<path d="M160 56 L116 150 L86 196 Q82 204 74 200 L32 180 Q24 176 28 168 L70 92 Q82 76 100 70 Z" fill="${tint}"/><path d="M240 56 L284 150 L314 196 Q318 204 326 200 L368 180 Q376 176 372 168 L330 92 Q318 76 300 70 Z" fill="${tint}"/><g stroke="${seam}" stroke-width="1.4" fill="none"><path d="M160 56 L116 150"/><path d="M240 56 L284 150"/></g>`;
   }
+  // Garment-wash fade: soft, irregular light patches drawn with gradients (no noise filters).
+  const vintage = finish === 'vintage'
+    ? `<radialGradient id="${uid}w"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`
+    : '';
+  const fades = finish === 'vintage'
+    ? [[150, 140, 90, 60], [250, 230, 110, 70], [170, 330, 100, 50], [60, 150, 40, 30], [340, 150, 40, 30], [230, 110, 50, 30]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#${uid}w)"/>`).join('') + `<rect width="400" height="440" fill="#fff" opacity=".05"/>`
+    : '';
+  const isOver = shape === 'oversized' || shape === 'drop';
+  const armholes = shape === 'raglan' ? [] : isOver ? [] : ['M100 71 Q109 110 114 150', 'M300 71 Q291 110 286 150'];
+  const folds = isOver
+    ? ['M106 186 Q130 200 140 236', 'M294 186 Q270 202 260 238']
+    : ['M118 160 Q138 176 148 212', 'M282 160 Q262 178 252 214'];
+  const ribMid = back
+    ? (isOver ? 'M165 55 C180 63 220 63 235 55' : 'M159 53 C176 59 224 59 241 53')
+    : (isOver ? 'M165 55 C176 82 224 82 235 55' : 'M159 53 C171 79 229 79 241 53');
   const rib = back ? S.backRib : S.rib;
   const inside = back ? S.backInside : S.inside;
-  let collar = `<path d="${inside}" fill="${insideFill}"/><path d="${rib}" fill="${ribFill}"/><path d="${rib}" fill="none" stroke="${seam}" stroke-width="1"/>`;
+  let collar = `<path d="${inside}" fill="${insideFill}"/><path d="${rib}" fill="${ribFill}"/><path d="${ribMid}" fill="none" stroke="${seam}" stroke-width="5" stroke-dasharray=".7 1.9" opacity=".5"/><path d="${rib}" fill="none" stroke="${seam}" stroke-width=".9"/>`;
   if (shape === 'polo') {
     const flap = shade(color, light ? -0.04 : 0.06);
     collar = back
@@ -103,21 +118,21 @@ export function teeSVG({ shape = 'crew', color = '#e7dfd0', view = 'front', prin
   }
   const label = back ? '' : `<rect x="192" y="${shape === 'oversized' || shape === 'drop' ? 58 : 55}" width="16" height="8" rx="1" fill="${light ? '#2a2a2a' : '#e9e1d2'}" opacity=".85"/>`;
   const art = printArt(print, ink, view, cx, back ? cy + 20 : cy).replace('fill="currentColor"', `fill="${color}"`);
-  const vintage = finish === 'vintage'
-    ? `<filter id="${uid}w" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.004 0.012" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .2 -.06"/></filter>`
-    : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img"><defs>
 <linearGradient id="${uid}l" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".16"/><stop offset=".22" stop-color="#000" stop-opacity=".02"/><stop offset=".5" stop-color="#fff" stop-opacity=".07"/><stop offset=".78" stop-color="#000" stop-opacity=".03"/><stop offset="1" stop-color="#000" stop-opacity=".18"/></linearGradient>
 <linearGradient id="${uid}v" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".06"/><stop offset=".7" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".1"/></linearGradient>
-<filter id="${uid}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .09 0"/></filter>
+<pattern id="${uid}k" width="2.4" height="3.4" patternUnits="userSpaceOnUse"><path d="M0 0 L1.2 2.1 L2.4 0" fill="none" stroke="${light ? '#000' : '#fff'}" stroke-width=".4"/></pattern>
+<filter id="${uid}f" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="4"/></filter>
 <filter id="${uid}s" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#2a2014" flood-opacity=".22"/></filter>
 <clipPath id="${uid}c"><path d="${S.body}"/></clipPath>${vintage}</defs>
 <g filter="url(#${uid}s)"><path d="${S.body}" fill="${color}"/></g>
 <g clip-path="url(#${uid}c)">${details}
 <rect width="400" height="440" fill="url(#${uid}l)"/><rect width="400" height="440" fill="url(#${uid}v)"/>
-${finish === 'vintage' ? `<rect width="400" height="440" filter="url(#${uid}w)"/>` : ''}
-<rect width="400" height="440" filter="url(#${uid}n)"/>
-<g fill="none" stroke="${seam}" stroke-width="1.1" stroke-dasharray="3 3">${S.hems.map((d) => `<path d="${d}"/>`).join('')}</g>
+${fades}
+<g filter="url(#${uid}f)" fill="none" stroke-linecap="round">${folds.map((d) => `<path d="${d}" stroke="#000" stroke-opacity="${light ? 0.08 : 0.18}" stroke-width="9"/>`).join('')}</g>
+<rect width="400" height="440" fill="url(#${uid}k)" opacity="${light ? 0.045 : 0.05}"/>
+<g fill="none" stroke="${seam}" stroke-width=".9">${armholes.map((d) => `<path d="${d}"/>`).join('')}</g>
+<g fill="none" stroke="${seam}" stroke-width="1" stroke-dasharray="2.6 2">${S.hems.map((d) => `<path d="${d}"/>`).join('')}</g>
 <g fill="none" stroke="${seam}" stroke-width="1.2">${S.shoulders.map((d) => `<path d="${d}"/>`).join('')}</g>
 <g style="mix-blend-mode:multiply" opacity=".92">${art}</g>
 </g>${collar}${label}</svg>`;
@@ -150,6 +165,6 @@ export function fabricSVG({ texture = 'jersey', color = '#e7dfd0', uid = 'f' } =
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img"><defs>${pat}
 <radialGradient id="${uid}r" cx=".3" cy=".25" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></radialGradient>
 <linearGradient id="${uid}f" x1="0" y1="0" x2="1" y2="1"><stop offset=".45" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".18"/><stop offset=".62" stop-color="#fff" stop-opacity=".1"/><stop offset=".75" stop-color="#000" stop-opacity="0"/></linearGradient>
-<filter id="${uid}n"><feTurbulence type="fractalNoise" baseFrequency="${slub ? '0.02 0.6' : '0.9'}" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 ${light ? 0 : 1}  0 0 0 0 ${light ? 0 : 1}  0 0 0 0 ${light ? 0 : 1}  0 0 0 ${slub ? '.35' : '.12'} 0"/></filter></defs>
-<rect width="400" height="400" fill="url(#${uid}p)"/><rect width="400" height="400" filter="url(#${uid}n)"/><rect width="400" height="400" fill="url(#${uid}f)"/><rect width="400" height="400" fill="url(#${uid}r)"/></svg>`;
+<pattern id="${uid}s" width="37" height="29" patternUnits="userSpaceOnUse">${slub ? `<g fill="${light ? '#000' : '#fff'}" opacity=".16"><rect x="3" y="4" width="9" height="1.6" rx=".8"/><rect x="21" y="13" width="12" height="1.6" rx=".8"/><rect x="8" y="22" width="7" height="1.6" rx=".8"/><circle cx="30" cy="4" r=".9"/><circle cx="16" cy="9" r=".8"/><circle cx="5" cy="15" r=".7"/></g>` : `<g fill="${light ? '#000' : '#fff'}" opacity=".08"><circle cx="5" cy="6" r=".8"/><circle cx="23" cy="3" r=".7"/><circle cx="14" cy="17" r=".8"/><circle cx="31" cy="21" r=".7"/><circle cx="7" cy="25" r=".6"/></g>`}</pattern></defs>
+<rect width="400" height="400" fill="url(#${uid}p)"/><rect width="400" height="400" fill="url(#${uid}s)"/><rect width="400" height="400" fill="url(#${uid}f)"/><rect width="400" height="400" fill="url(#${uid}r)"/></svg>`;
 }

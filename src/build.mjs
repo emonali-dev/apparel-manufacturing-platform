@@ -97,7 +97,11 @@ function header(p) {
 </div></div></header>
 <div class="drawer" id="drawer" data-open="false" aria-hidden="true">
 <div class="drawer-top"><a class="logo" href="/"><b>SIDDIQIYA</b><small>APPAREL</small></a><button class="icon-btn" data-menu-close aria-label="Close menu">${I.close}</button></div>
-<nav aria-label="Mobile">${navItems.map(([h, t]) => `<a href="${h}">${t}<span aria-hidden="true">→</span></a>${h === '/products/' ? `<div class="sub">${categories.map((c) => `<a href="/categories/${c.slug}/">${c.name.replace(' T-Shirts', '')}</a>`).join('')}</div>` : ''}`).join('')}<a href="/wishlist/">Wishlist<span aria-hidden="true">→</span></a></nav>
+<form class="drawer-search" action="/search/" method="get" role="search"><label class="sr-only" for="q-drawer">Search</label><input id="q-drawer" class="input" name="q" type="search" placeholder="Search tees, fabrics, GSM…"><button class="icon-btn" type="submit" aria-label="Search">${I.search}</button></form>
+<nav aria-label="Mobile">${navItems.map(([h, t]) => (h === '/products/'
+    ? `<details class="drawer-acc"><summary>${t}<span aria-hidden="true">+</span></summary><div class="sub"><a href="/products/">All products</a>${categories.map((c) => `<a href="/categories/${c.slug}/">${c.name.replace(' T-Shirts', '')}</a>`).join('')}</div></details>`
+    : `<a href="${h}"${isActive(h, p) ? ' aria-current="page"' : ''}>${t}<span aria-hidden="true">→</span></a>`)).join('')}
+<div class="drawer-links"><a href="/wishlist/">${I.heart} Wishlist <span class="count" data-wish-count></span></a><a href="/quote/">${I.bag} Quote list <span class="count" data-quote-count></span></a></div></nav>
 <div class="drawer-foot"><a class="btn" href="/quote/">Request a Quote</a><a class="btn btn--ghost" href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">${I.wa} WhatsApp ${site.whatsappDisplay}</a></div>
 </div>
 <div class="search-ov" data-open="false" role="dialog" aria-modal="true" aria-label="Search"><div class="search-box"><div class="wrap">
@@ -136,12 +140,12 @@ function page({ path: p, title, desc, body, schema, image, priority = 0.7, scrip
 <meta property="og:type" content="website"><meta property="og:site_name" content="${site.brand}"><meta property="og:title" content="${esc(t)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${og}"><meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#111111"><link rel="icon" href="/assets/img/mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
 <link rel="stylesheet" href="/assets/css/site.css?v=${VERSION}">
 ${schema ? `<script type="application/ld+json">${JSON.stringify(schema)}</script>` : ''}
 </head><body>${header(p)}<main id="main">${body}</main>${footer()}
 <script src="/assets/js/data.js?v=${VERSION}"></script><script src="/assets/js/site.js?v=${VERSION}" defer></script>${scripts}</body></html>`;
-  out(p === '/404.html' ? '404.html' : path.join(p, 'index.html'), html);
+  out(p === '/404.html' ? '404.html' : path.join(p, 'index.html'), html.replace(/<img (?![^>]*decoding)/g, '<img decoding="async" '));
   if (p !== '/404.html') pages.push([p, priority]);
 }
 
@@ -155,8 +159,8 @@ function card(p) {
 <a class="card-media" href="/products/${p.slug}/" aria-label="${esc(p.name)}"><img class="main" src="${img(p, c0, 'front')}" alt="${esc(p.name)} in ${colors[c0].name}, front" width="400" height="440" loading="lazy"><img class="alt" src="${img(p, c0, 'back')}" alt="" width="400" height="440" loading="lazy"><span class="card-badge">${p.gsm} GSM</span></a>
 <button class="icon-btn card-wish" data-wish="${p.id}" aria-pressed="false" aria-label="Save ${esc(p.name)} to wishlist">${I.heart}</button>
 <div class="card-quick"><button class="btn btn--sm" data-quick="${p.id}">Quick view</button></div>
-<div class="card-body"><a class="card-title" href="/products/${p.slug}/">${p.name}</a><span class="card-spec">${fab.name} · ${p.gsm} GSM · ${p.fit}</span>${swatches(p.colors)}<span class="sizes">${p.sizes[0]}–${p.sizes.at(-1)}</span>
-<div class="card-foot"><span class="price">Price on request</span><button data-add="${p.id}">Add to quote +</button></div></div></article>`;
+<div class="card-body"><a class="card-title" href="/products/${p.slug}/">${p.name}</a><span class="card-spec">${fab.name} · ${p.gsm} GSM</span><span class="card-comp">${fab.composition}</span>${swatches(p.colors)}<span class="sizes">${p.fit} fit · ${p.sizes[0]}–${p.sizes.at(-1)}</span>
+<div class="card-foot"><span class="price">Price &amp; MOQ on request</span><button data-add="${p.id}" aria-label="Request a quote for ${esc(p.name)}">Request quote +</button></div></div></article>`;
 }
 const head = (eyebrow, title, lead = '', action = '') => `<div class="head rv"><div><p class="eyebrow">${eyebrow}</p><h2 class="h2">${title}</h2>${lead ? `<p class="lead">${lead}</p>` : ''}</div>${action}</div>`;
 const collArt = (c) => {
@@ -286,8 +290,8 @@ page({
 <button class="btn btn--ghost btn--sm" type="button" data-filters-reset>Clear filters</button>
 <button class="btn filters-apply" type="button" data-filters-close>Show results</button>
 </aside>
-<div><div class="toolbar"><span data-result-count class="muted">${products.length} styles</span><div style="display:flex;gap:8px"><button class="btn btn--ghost btn--sm filter-toggle" data-filters-open aria-controls="filters">Filters</button><label class="sr-only" for="sort">Sort</label><select class="input" id="sort" data-sort><option value="featured">Featured</option><option value="gsm-asc">GSM: light to heavy</option><option value="gsm-desc">GSM: heavy to light</option><option value="name">Name A–Z</option></select></div></div>
-<div class="grid" data-catalog style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${products.map(card).join('')}</div><p class="empty" data-empty hidden>No styles match these filters. <button class="link" style="background:none;border:0" data-filters-reset>Clear filters</button></p></div>
+<div><div class="toolbar"><span data-result-count class="muted">${products.length} styles</span><div class="toolbar-actions"><button class="btn btn--ghost btn--sm filter-toggle" data-filters-open aria-controls="filters">Filters</button><label class="sr-only" for="sort">Sort</label><select class="input" id="sort" data-sort><option value="featured">Featured</option><option value="gsm-asc">GSM: light to heavy</option><option value="gsm-desc">GSM: heavy to light</option><option value="name">Name A–Z</option></select></div></div>
+<div class="grid grid--catalog" data-catalog>${products.map(card).join('')}</div><p class="empty" data-empty hidden>No styles match these filters. <button class="link" style="background:none;border:0" data-filters-reset>Clear filters</button></p></div>
 </div></section>`,
 });
 
@@ -340,6 +344,7 @@ for (const p of products) {
 <div class="pdp-block"><div class="row"><span class="caps" style="font-size:11px">Colour — <span data-color-name>${colors[c0].name}</span></span></div><div class="opts">${p.colors.map((k, i) => `<button class="color-btn" type="button" data-color="${k}" aria-pressed="${i === 0}" aria-label="${colors[k].name}" title="${colors[k].name}" style="background:${colors[k].hex}"></button>`).join('')}</div></div>
 <div class="pdp-block"><div class="row"><span class="caps" style="font-size:11px">Quantity by size</span><a class="link" style="font-size:10px" href="#size-chart" data-open-chart>Size chart</a></div><div class="size-grid">${p.sizes.map((s) => `<label>${s}<input class="input" type="number" min="0" step="1" inputmode="numeric" name="${s}" placeholder="0" data-size="${s}"></label>`).join('')}</div><p class="hint" style="margin-top:8px">Leave blank if you only want to ask about this style.</p></div>
 <div class="actions" style="margin-top:8px"><button class="btn" style="flex:1" data-add-detail="${p.id}">Add to quote list</button><button class="btn btn--ghost" data-wish="${p.id}" aria-pressed="false" aria-label="Save to wishlist">${I.heart.replace('<svg', '<svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5"')}</button></div>
+<div class="pdp-more"><a class="btn btn--ghost btn--sm" href="#sample-request">Request a sample</a><a class="btn btn--ghost btn--sm" href="#wholesale-inquiry">Wholesale inquiry</a></div>
 <a class="link" style="margin-top:18px" href="#" data-wa-product="${p.id}">Ask about this style on WhatsApp</a>
 <dl class="specs">
 <div><dt>Product ID</dt><dd>${p.id}</dd></div><div><dt>Fabric</dt><dd><a href="/fabrics/${f.slug}/" style="text-decoration:underline">${f.name}</a> — ${f.composition}</dd></div>
@@ -351,6 +356,24 @@ for (const p of products) {
 <details class="acc"><summary>Fabric &amp; care</summary><div><p style="margin-top:0">${f.description}</p><ul>${f.care.map((x) => `<li>${x}</li>`).join('')}</ul></div></details>
 <details class="acc"><summary>Customisation options</summary><div><ul><li>Screen printing, DTG and DTF printing</li><li>Logo embroidery, flat or 3D puff</li><li>Woven, printed or tagless neck labels</li><li>Hang tags and branded packaging</li><li>Custom colours via lab dip approval</li></ul><a class="link" href="/custom-design/?category=${c.slug}">Open the design studio</a></div></details>
 </div></section>
+<section class="section section--panel" id="inquiry"><div class="wrap">${head('Samples & wholesale', 'Order a sample or open a wholesale inquiry.', 'Both requests go straight to our sales team with this style already filled in.')}
+<div class="inquiry-grid">
+<form class="panel-form form" id="sample-request" data-wa="Sample request — ${esc(p.name)} [${p.id}]" novalidate><h3 class="h3">Sample request</h3>
+<div class="form-row"><div class="field"><label for="s-colour-${p.id}">Colour <span class="req">*</span></label><select class="input" id="s-colour-${p.id}" name="Sample colour" required><option value="">Select…</option>${p.colors.map((k) => `<option>${colors[k].name}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div>
+<div class="field"><label for="s-size-${p.id}">Size <span class="req">*</span></label><select class="input" id="s-size-${p.id}" name="Sample size" required><option value="">Select…</option>${p.sizes.map((z) => `<option>${z}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div></div>
+<div class="form-row"><div class="field"><label for="s-name-${p.id}">Contact person <span class="req">*</span></label><input class="input" id="s-name-${p.id}" name="Contact person" autocomplete="name" required><span class="err" aria-live="polite"></span></div>
+<div class="field"><label for="s-email-${p.id}">Business email <span class="req">*</span></label><input class="input" id="s-email-${p.id}" name="Email" type="email" autocomplete="email" required><span class="err" aria-live="polite"></span></div></div>
+<div class="field"><label for="s-addr-${p.id}">Delivery address <span class="req">*</span></label><textarea class="input" id="s-addr-${p.id}" name="Delivery address" required style="min-height:96px"></textarea><span class="err" aria-live="polite"></span></div>
+<p class="hint">Sample and courier costs are confirmed with you before dispatch.</p><button class="btn" type="submit">Request sample</button></form>
+<form class="panel-form form" id="wholesale-inquiry" data-wa="Wholesale inquiry — ${esc(p.name)} [${p.id}]" novalidate><h3 class="h3">Wholesale inquiry</h3>
+<div class="form-row"><div class="field"><label for="w-co-${p.id}">Company <span class="req">*</span></label><input class="input" id="w-co-${p.id}" name="Company" autocomplete="organization" required><span class="err" aria-live="polite"></span></div>
+<div class="field"><label for="w-country-${p.id}">Country <span class="req">*</span></label><select class="input" id="w-country-${p.id}" name="Country" required><option value="">Select…</option>${countries.map((c) => `<option>${c}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div></div>
+<div class="form-row"><div class="field"><label for="w-email-${p.id}">Business email <span class="req">*</span></label><input class="input" id="w-email-${p.id}" name="Email" type="email" autocomplete="email" required><span class="err" aria-live="polite"></span></div>
+<div class="field"><label for="w-qty-${p.id}">Estimated quantity <span class="req">*</span></label><input class="input" id="w-qty-${p.id}" name="Estimated quantity (pcs)" type="number" min="1" inputmode="numeric" required><span class="err" aria-live="polite"></span></div></div>
+<div class="form-row"><div class="field"><label for="w-type-${p.id}">Business type</label><select class="input" id="w-type-${p.id}" name="Business type"><option value="">Select…</option>${businessTypes.map((c) => `<option>${c}</option>`).join('')}</select><span class="err" aria-live="polite"></span></div>
+<div class="field"><label for="w-date-${p.id}">Target delivery</label><input class="input" id="w-date-${p.id}" name="Target delivery" type="date"><span class="err" aria-live="polite"></span></div></div>
+<p class="hint">Wholesale pricing and MOQ are shared with verified buyers.</p><button class="btn" type="submit">Send inquiry</button></form>
+</div>${waNote}</div></section>
 <section class="section"><div class="wrap">${head('Related', 'Complete the range')}<div class="grid">${related.map(card).join('')}</div></div></section>`,
   });
 }
@@ -385,19 +408,35 @@ page({
   path: '/custom-design/', title: 'Custom Design Studio', priority: 0.9, scripts: `<script type="module" src="/assets/js/studio.mjs?v=${VERSION}"></script>`, desc: 'Configure a custom T-shirt: category, fabric, GSM, colours, sizes, artwork placement and print method — then request a quotation.',
   body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Custom Design']])}<p class="eyebrow">Design studio</p><h1 class="h1">Configure your custom T-shirt.</h1><p class="lead">Build the specification, preview your artwork on the garment, and send it for a quotation. Our team confirms every detail with a sample before production.</p></div></section>
 <section class="section--tight"><div class="wrap studio" data-studio>
-<div class="studio-stage"><div class="stage-tabs"><button class="chip" type="button" data-stage-view="front" aria-pressed="true">Front</button><button class="chip" type="button" data-stage-view="back" aria-pressed="false">Back</button></div><div class="canvas" data-canvas></div><p class="stage-note">Mockup preview for placement only. Colour and scale are confirmed on your physical sample.</p></div>
+<div class="studio-preview">
+<div class="stage-bar"><div class="stage-tabs" role="tablist" aria-label="Preview view"><button class="chip" type="button" role="tab" data-stage-view="front" aria-selected="true" aria-pressed="true">Front<i class="tab-dot" data-tab-dot="front" hidden></i></button><button class="chip" type="button" role="tab" data-stage-view="back" aria-selected="false" aria-pressed="false">Back<i class="tab-dot" data-tab-dot="back" hidden></i></button><button class="chip" type="button" role="tab" data-stage-view="left" aria-selected="false" aria-pressed="false">Left sleeve<i class="tab-dot" data-tab-dot="left" hidden></i></button><button class="chip" type="button" role="tab" data-stage-view="right" aria-selected="false" aria-pressed="false">Right sleeve<i class="tab-dot" data-tab-dot="right" hidden></i></button></div>
+<label class="switch"><input type="checkbox" data-show-area checked><span>Print area</span></label></div>
+<div class="studio-stage" data-stage tabindex="0" aria-label="Garment preview. When artwork is placed, use arrow keys to move it and plus or minus to resize."><div class="stage-canvas" data-canvas></div>
+<button class="stage-empty" type="button" data-stage-upload>${I.upload}<span data-stage-empty-text>Add artwork to the front</span></button></div>
+<div class="stage-colours"><div class="row"><span class="caps">Garment colour</span><span class="muted" data-preview-color-name></span></div><div class="swatch-row" role="radiogroup" aria-label="Preview garment colour">${Object.entries(colors).map(([k, c]) => `<button class="color-btn" type="button" role="radio" aria-checked="false" data-preview-color="${k}" title="${c.name}" aria-label="${c.name}" style="background:${c.hex}"></button>`).join('')}</div></div>
+<div class="art-panel" data-art-panel hidden>
+<div class="art-head"><b data-art-title>Front artwork</b><span class="muted" data-art-dims></span></div>
+<div class="field"><label for="art-select">Artwork on this placement</label><select class="input" id="art-select" data-art-select></select></div>
+<div class="range"><label for="art-size">Size</label><input id="art-size" type="range" min="10" max="100" value="70" data-art-size><output data-out-size>70%</output></div>
+<div class="range"><label for="art-x">Horizontal</label><input id="art-x" type="range" min="0" max="100" value="50" data-art-x><output data-out-x>50%</output></div>
+<div class="range"><label for="art-y">Vertical</label><input id="art-y" type="range" min="0" max="100" value="20" data-art-y><output data-out-y>20%</output></div>
+<div class="art-actions"><button class="btn btn--ghost btn--sm" type="button" data-art-center>Centre</button><button class="btn btn--ghost btn--sm" type="button" data-art-fit>Fit to area</button><button class="btn btn--ghost btn--sm" type="button" data-art-reset>Reset</button><button class="q-remove" type="button" data-art-remove>Remove from this placement</button></div>
+<p class="hint">Drag the artwork on the preview to reposition it. It always stays inside the print area and keeps its original proportions.</p>
+</div>
+<div class="fabric-strip"><img data-fabric-swatch alt="" width="64" height="64"><div><span class="caps">Fabric</span><b data-fabric-name>Select a fabric</b><span class="muted" data-fabric-meta>Texture preview updates with your fabric and colour.</span></div></div>
+<p class="stage-disclaimer">${I.info}<span>Digital mockup for placement reference only. Print colours, size and position are confirmed on your physical pre-production sample before bulk production.</span></p>
+</div>
 <form class="form" data-studio-form novalidate>
 <div class="studio-step"><h3><span>01</span>Style</h3><div class="form-row">${field('Category', 'T-shirt category', { req: true, opts: categories.map((c) => c.name) })}${field('Fabric', 'Fabric', { req: true, opts: fabrics.map((f) => f.name) })}</div><div class="form-row">${field('GSM', 'Weight (GSM)', { req: true, opts: gsmOptions.map(String) })}<div></div></div></div>
-<div class="studio-step"><h3><span>02</span>Colours</h3><fieldset class="field"><legend>Choose one or more — the first selected is previewed</legend><div class="opts" data-studio-colors>${Object.entries(colors).map(([k, c], i) => `<label class="opt"><input type="checkbox" name="color" value="${k}"${i === 0 ? ' checked' : ''}><span><i class="dot" style="background:${c.hex}"></i>${c.name}</span></label>`).join('')}</div></fieldset></div>
+<div class="studio-step"><h3><span>02</span>Colours</h3><fieldset class="field"><legend>Colours to quote — choose one or more</legend><div class="opts" data-studio-colors>${Object.entries(colors).map(([k, c]) => `<label class="opt"><input type="checkbox" name="color" value="${k}"${k === 'white' ? ' checked' : ''}><span><i class="dot" style="background:${c.hex}"></i>${c.name}</span></label>`).join('')}</div></fieldset><p class="hint" style="margin-top:10px">The garment colour on the preview is added to this list automatically.</p></div>
 <div class="studio-step"><h3><span>03</span>Sizes &amp; quantities</h3><div class="size-grid">${['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((s) => `<label>${s}<input class="input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" data-size="${s}"></label>`).join('')}</div><p class="hint" style="margin-top:8px">Total: <b data-total>0</b> pieces. Larger sizes on request.</p></div>
 <div class="studio-step"><h3><span>04</span>Artwork</h3>
-<label class="upload" data-drop><input type="file" accept=".png,.jpg,.jpeg,.svg,.pdf,image/png,image/jpeg,image/svg+xml,application/pdf" multiple hidden data-file>${I.upload}<b>Upload design, logo or artwork</b><span class="hint">PNG, JPG, SVG or PDF · up to 20 MB each</span></label>
+<label class="upload" data-drop><input type="file" accept=".png,.jpg,.jpeg,.svg,.pdf,image/png,image/jpeg,image/svg+xml,application/pdf" multiple hidden data-file>${I.upload}<b>Upload design, logo or artwork</b><span class="hint">PNG (transparent supported), JPG, SVG or PDF · up to 20 MB each · max 6 files</span></label>
 <div class="file-list" data-file-list></div>
-<div class="range"><span>Artwork size</span><input type="range" min="20" max="70" value="42" data-art-scale aria-label="Artwork size"></div>
-<div class="range"><span>Vertical position</span><input type="range" min="18" max="60" value="30" data-art-y aria-label="Artwork vertical position"></div>
 <p class="hint">Files stay on your device for the preview. When you send the request, attach them in the WhatsApp chat so our team receives the originals.</p></div>
 <div class="studio-step"><h3><span>05</span>Placement &amp; method</h3>
-<fieldset class="field"><legend>Print placement</legend><div class="opts">${['Front', 'Back', 'Left sleeve', 'Right sleeve'].map((t, i) => `<label class="opt"><input type="checkbox" name="placement" value="${t}"${i === 0 ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div></fieldset>
+<fieldset class="field"><legend>Print placement</legend><div class="opts">${[['front', 'Front'], ['back', 'Back'], ['left', 'Left sleeve'], ['right', 'Right sleeve']].map(([k, t]) => `<label class="opt"><input type="checkbox" name="placement" value="${t}" data-placement="${k}"><span>${t}</span></label>`).join('')}</div></fieldset>
+<p class="hint" style="margin-top:10px">Placements with artwork are selected automatically. Tick others if artwork will follow.</p>
 <fieldset class="field" style="margin-top:18px"><legend>Decoration method</legend><div class="opts">${['Screen printing', 'DTG printing', 'Embroidery', 'Not sure — advise me'].map((t, i) => `<label class="opt"><input type="radio" name="method" value="${t}"${i === 0 ? ' checked' : ''}><span>${t}</span></label>`).join('')}</div></fieldset></div>
 <div class="studio-step"><h3><span>06</span>Your details</h3>${contactFields}${field('Instructions', 'Custom instructions', { type: 'textarea', ph: 'Pantone references, label requirements, deadline, packaging…' })}</div>
 <button class="btn btn--block" type="submit">Request quotation</button>${waNote}
@@ -471,7 +510,7 @@ page({
 });
 page({
   path: '/search/', title: 'Search', desc: 'Search products and fabrics.', priority: 0.3,
-  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Search']])}<form action="/search/" method="get" role="search" style="display:flex;gap:12px;border-bottom:1px solid var(--black);max-width:720px"><label class="sr-only" for="q">Search</label><input id="q" name="q" type="search" class="h2" style="flex:1;border:0;background:none;outline:none;padding:8px 0" placeholder="Search…"><button class="icon-btn" aria-label="Search">${I.search}</button></form><p class="muted" data-search-summary style="margin-top:18px"></p></div></section>
+  body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Search']])}<form action="/search/" method="get" role="search" style="display:flex;gap:12px;border-bottom:1px solid var(--black);max-width:720px"><label class="sr-only" for="q">Search</label><input id="q" name="q" type="search" class="h2" style="flex:1;min-width:0;width:100%;border:0;background:none;outline:none;padding:8px 0" placeholder="Search…"><button class="icon-btn" aria-label="Search">${I.search}</button></form><p class="muted" data-search-summary style="margin-top:18px"></p></div></section>
 <section class="section--tight"><div class="wrap"><div class="grid" data-search-grid></div><div data-search-fabrics style="margin-top:48px"></div></div></section>`,
 });
 
@@ -526,12 +565,13 @@ const data = {
   wa: site.whatsapp,
   colors: Object.fromEntries(Object.entries(colors).map(([k, c]) => [k, c])),
   categories: categories.map(({ slug, name, shape }) => ({ slug, name, shape })),
-  fabrics: fabrics.map(({ slug, name, gsm, composition, colors: cs }) => ({ slug, name, gsm, composition, color: cs[0] })),
-  products: products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, cat: p.cat, catName: catBy[p.cat].name, fabric: p.fabric, fabricName: fabBy[p.fabric].name, gsm: p.gsm, fit: p.fit, colors: p.colors, sizes: p.sizes, desc: p.desc, shape: shapeOf(p), print: p.print || '', finish: p.finish || '' })),
+  fabrics: fabrics.map(({ slug, name, gsm, composition, texture, colors: cs }) => ({ slug, name, gsm, composition, texture, color: cs[0] })),
+  products: products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, cat: p.cat, catName: catBy[p.cat].name, fabric: p.fabric, fabricName: fabBy[p.fabric].name, comp: fabBy[p.fabric].composition, gsm: p.gsm, fit: p.fit, colors: p.colors, sizes: p.sizes, desc: p.desc, shape: shapeOf(p), print: p.print || '', finish: p.finish || '' })),
 };
 out('assets/js/data.js', `window.SA=${JSON.stringify(data)};`);
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages.map(([p, pr]) => `<url><loc>${site.domain}${p}</loc><priority>${pr}</priority></url>`).join('\n')}\n</urlset>\n`);
 out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /src/\nSitemap: ${site.domain}/sitemap.xml\n`);
 out('.nojekyll', '');
+out('assets/js/mockup.mjs', '// Generated from src/mockup.mjs — do not edit.\n' + fs.readFileSync(path.join(ROOT, 'src/mockup.mjs'), 'utf8'));
 out('assets/js/art.mjs', '// Generated from src/art.mjs — do not edit.\n' + fs.readFileSync(path.join(ROOT, 'src/art.mjs'), 'utf8'));
 console.log(`Built ${pages.length + 1} pages, ${products.length} products.`);

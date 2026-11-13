@@ -8,7 +8,7 @@ A static site served by GitHub Pages from this repository's `main` branch.
 
 - Home, 6 collections, 12 category pages, 24 product pages, catalog with filters and sorting
 - Fabric library (9 fabrics) with sample-request forms
-- Custom design studio: configure style, fabric, GSM, colours and sizes; preview artwork on a garment mockup
+- Custom design studio: garment mockups (front, back, both sleeves) with defined print areas; artwork is placed inside the print area, keeps its proportions, can be dragged and resized, and supports transparent PNG, JPG, SVG (sanitised) and PDF
 - Manufacturing (OEM, ODM, private label + 13 service pages with inquiry forms), wholesale buyer application
 - Quote list and wishlist (saved in the visitor's browser), search, size guide, shipping, FAQ, privacy, terms
 - SEO: meta tags, Open Graph, JSON-LD, `sitemap.xml`, `robots.txt`
@@ -23,7 +23,7 @@ generated garment illustrations until real photography is supplied.
 
 ## Editing content
 All content lives in `src/data.mjs` (products, fabrics, categories, collections, services).
-Garment and fabric illustrations come from `src/art.mjs`.
+Garment and fabric illustrations come from `src/art.mjs`; studio mockup templates and print areas from `src/mockup.mjs`.
 
 ```bash
 node src/build.mjs      # regenerates every page, image, sitemap and data file
