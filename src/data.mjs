@@ -11,6 +11,8 @@ export const site = {
   address: 'Phnom Penh, Cambodia 120101',
   tagline: 'Premium T-Shirt Design, Custom Manufacturing and Global Apparel Solutions.',
   parent: 'SIDDIQIYA Technology',
+  // Google Analytics 4 Measurement ID (e.g. 'G-XXXXXXXXXX'). Empty = no analytics script is loaded.
+  gaId: process.env.GA_MEASUREMENT_ID || '',
 };
 
 export const colors = {
@@ -138,6 +140,8 @@ export const products = [
 ].map((x, i) => ({
   ...x,
   id: `PRD-${String(i + 1).padStart(4, '0')}`,
+  // Same rule as the database backfill (migration 06): SA-<first 3 letters of category>-<number>.
+  sku: `SA-${x.cat.replace(/-t-shirts$/, '').slice(0, 3).toUpperCase()}-${String(i + 1).padStart(4, '0')}`,
   slug: x.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
 }));
 

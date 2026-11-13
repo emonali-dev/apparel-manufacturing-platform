@@ -423,40 +423,105 @@
 
     var qform = $('form[data-include-quote]');
     var authBox = $('[data-quote-auth]');
-    var me = null;
+    var me = null, step = 1, picked = [];
+    var get = function (n) { var el = qform.querySelector('[name="' + n + '"]'); return el ? fieldValue(el) : ''; };
+    var signedBuyer = function () { return !!(window.SB && SB.user() && me && me.buyer); };
+    var fileHint = $('[data-file-hint]'), fileInput = $('[data-files]'), fileList = $('[data-file-list]');
+    function fileState() {
+      if (!fileInput) return;
+      fileInput.disabled = !signedBuyer();
+      fileHint.innerHTML = signedBuyer() ? 'Files are stored privately and shared only with our sales team.' :
+        'File upload needs a buyer account so your artwork stays private. <a class="link" href="/account/login/?next=/quote/">Sign in</a> or <a class="link" href="/account/register/">register</a> — or send files on WhatsApp after submitting.';
+    }
     if (window.SB && SB.user()) {
       authBox.innerHTML = '<p>Signed in as <b>' + esc(SB.user().email) + '</b>. This request will appear in your <a href="/account/">buyer account</a> with its status.</p>';
       SB.rpc('apparel_me').then(function (m) {
         me = m;
         var b = m && m.buyer;
+        fileState();
         if (!b) { authBox.innerHTML += '<p><a class="link" href="/account/?tab=profile">Complete your buyer profile</a> before sending a tracked request.</p>'; return; }
         var set = function (n, v) { var el = qform.querySelector('[name="' + n + '"]'); if (el && v && !el.value) { if (el.tagName === 'SELECT') { [].forEach.call(el.options, function (o) { if (o.text === v) el.value = o.value || o.text; }); } else el.value = v; } };
-        set('Contact person', b.contact_person); set('Company', b.company_name); set('Email', m.email); set('Phone', b.phone); set('Country', b.country); set('Business type', b.business_type);
-      }).catch(function () { /* the form still works as a guest request */ });
+        set('Contact person', b.contact_person); set('Company', b.company_name); set('Email', m.email); set('Phone', b.phone); set('WhatsApp', b.phone); set('Country', b.country); set('Business type', b.business_type); set('Website', b.website);
+      }).catch(function () { fileState(); });
     } else if (authBox) {
-      authBox.innerHTML = '<p><a href="/account/login/?next=/quote/">Sign in</a> or <a href="/account/register/">create a buyer account</a> to track this request, or send it as a guest below.</p>';
+      authBox.innerHTML = '<p><a href="/account/login/?next=/quote/">Sign in</a> or <a href="/account/register/">create a buyer account</a> to track this request and attach files, or send it as a guest.</p>';
     }
+    fileState();
+    function renderFiles() {
+      fileList.innerHTML = picked.map(function (f, i) { return '<li><span>' + esc(f.file.name) + '</span><span class="muted">' + (f.error ? '<span class="err">' + esc(f.error) + '</span>' : window.SAFiles.size(f.file.size)) + '</span><button type="button" class="q-remove" data-rm-file="' + i + '">Remove</button></li>'; }).join('');
+    }
+    if (fileInput) {
+      fileInput.addEventListener('change', async function () {
+        var add = Array.prototype.slice.call(fileInput.files); fileInput.value = '';
+        for (var i = 0; i < add.length; i++) {
+          if (picked.length >= 10) { toast('Attach up to 10 files per request.'); break; }
+          var entry = { file: add[i] };
+          try { await window.SAFiles.inspect(add[i]); } catch (e) { entry.error = e.message; }
+          picked.push(entry);
+        }
+        renderFiles();
+      });
+      fileList.addEventListener('click', function (e) { var i = e.target.getAttribute('data-rm-file'); if (i !== null) { picked.splice(+i, 1); renderFiles(); } });
+    }
+    function review() {
+      var lines = quoteLines();
+      var rows = [['Contact', [get('Contact person'), get('Company'), get('Email')].filter(Boolean).join(' · ')], ['Country', get('Country')], ['Order type', get('Order type')], ['Destination', get('Destination')], ['Target date', get('Target date')], ['Printing', get('Printing')], ['Embroidery', get('Embroidery')]];
+      $('[data-review]').innerHTML = '<h3 class="caps">Review</h3><dl class="specs">' + rows.filter(function (r) { return r[1]; }).map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') +
+        '<div><dt>Products</dt><dd>' + (lines.length ? lines.map(esc).join('<br>') : 'No styles selected — general inquiry') + '</dd></div></dl>';
+    }
+    function showStep(n) {
+      step = n;
+      $$('[data-step]', qform).forEach(function (f) { f.hidden = +f.getAttribute('data-step') !== n; });
+      $$('[data-step-tab]', qform).forEach(function (t) { var k = +t.getAttribute('data-step-tab'); t.classList.toggle('done', k < n); if (k === n) t.setAttribute('aria-current', 'step'); else t.removeAttribute('aria-current'); });
+      $('[data-prev]', qform).hidden = n === 1;
+      $('[data-next]', qform).hidden = n === 4;
+      qform.querySelector('[type="submit"]').hidden = n !== 4;
+      if (n === 4) review();
+      var top = qform.getBoundingClientRect().top + window.scrollY - 100;
+      if (window.scrollY > top) window.scrollTo({ top: top, behavior: 'smooth' });
+    }
+    $('[data-next]', qform).addEventListener('click', function () {
+      if (!validate($('[data-step="' + step + '"]', qform))) return;
+      if (step === 3) { var d = get('Target date'); if (d && d < new Date().toISOString().slice(0, 10)) { var el = qform.querySelector('[name="Target date"]'); el.setAttribute('aria-invalid', 'true'); el.parentNode.querySelector('.err').textContent = 'Choose a future date.'; el.focus(); return; } }
+      showStep(step + 1);
+    });
+    $('[data-prev]', qform).addEventListener('click', function () { showStep(step - 1); });
+    $$('[data-step-tab]', qform).forEach(function (t) { t.addEventListener('click', function () { var k = +t.getAttribute('data-step-tab'); if (k < step) showStep(k); }); });
+
     qform.addEventListener('submit', async function (e) {
       e.preventDefault();
-      if (!validate(qform)) return;
+      if (step !== 4) return;
+      for (var s = 1; s <= 3; s++) { if (!validate($('[data-step="' + s + '"]', qform))) { showStep(s); validate($('[data-step="' + s + '"]', qform)); return; } }
+      if (picked.some(function (f) { return f.error; })) { toast('Remove the files marked with an error first.'); return; }
       var old = qform.querySelector('.form-error'); if (old) old.remove();
       var items = quoteItems();
       var lines = quoteLines();
       var waText = ['*Request for quotation* — via app.hsdmj.com', ''].concat(collect(qform), ['', '*Quote list*'], lines.length ? lines : ['(No styles added — general inquiry)']).join('\n');
-      var get = function (n) { var el = qform.querySelector('[name="' + n + '"]'); return el ? fieldValue(el) : ''; };
       busy(qform, true);
       try {
         var res;
-        if (window.SB && SB.user() && me && me.buyer && items.length) {
-          var contact = ['Contact: ' + get('Contact person'), get('Company') && 'Company: ' + get('Company'), get('Phone') && 'Phone: ' + get('Phone')].filter(Boolean).join(' · ');
-          var r = await SB.rpc('apparel_submit_rfq', rpcArg({ order_type: get('Order type'), destination: get('Destination'), requirements: [get('Requirements'), contact].filter(Boolean).join('\n\n'), items: items }));
+        if (signedBuyer() && items.length) {
+          var uploaded = [];
+          for (var i = 0; i < picked.length; i++) {
+            qform.querySelector('[type="submit"]').textContent = 'Uploading ' + (i + 1) + ' of ' + picked.length + '…';
+            if (!picked[i].up) picked[i].up = await window.SAFiles.uploadRfq(picked[i].file);
+            uploaded.push(picked[i].up);
+          }
+          qform.querySelector('[type="submit"]').textContent = 'Sending…';
+          var r = await SB.rpc('apparel_submit_rfq', rpcArg({
+            order_type: get('Order type'), destination: get('Destination'), target_date: qform.querySelector('[name="Target date"]').value || null,
+            requirements: get('Requirements'), contact_name: get('Contact person'), whatsapp: get('WhatsApp') || get('Phone'), website: get('Website'), country: get('Country'),
+            budget: get('Budget'), printing: get('Printing'), embroidery: get('Embroidery'), customization: get('Customization'), items: items, files: uploaded,
+          }));
           res = { code: r.code, tracked: true };
         } else {
-          var r2 = await SB.rpc('apparel_submit_inquiry', rpcArg(inquiryPayload(qform, 'rfq', { Items: lines.length ? lines.join('\n') : 'General inquiry — no styles selected' })));
+          var extra = { Items: lines.length ? lines.join('\n') : 'General inquiry — no styles selected' };
+          if (picked.length) extra.Files = picked.length + ' file(s) selected — buyer will send them on WhatsApp';
+          var r2 = await SB.rpc('apparel_submit_inquiry', rpcArg(inquiryPayload(qform, 'rfq', extra)));
           res = { code: r2.code, tracked: false };
         }
-        save(QUOTE, []); renderQuote(); updateCounts();
-        showDone(qform, res, waText);
+        save(QUOTE, []); renderQuote(); updateCounts(); picked = []; renderFiles();
+        showDone(qform, res, waText); showStep(1);
       } catch (err) {
         showError(qform, err, waText);
       } finally { busy(qform, false); }
@@ -481,9 +546,9 @@
     $('#q').value = q;
     var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
     var hit = function (s) { s = s.toLowerCase(); return terms.every(function (t) { return s.indexOf(t) > -1; }); };
-    var ps = terms.length ? SA.products.filter(function (p) { return hit([p.name, p.catName, p.fabricName, p.gsm + ' gsm', p.fit, p.desc, p.colors.map(function (c) { return SA.colors[c].name; }).join(' ')].join(' ')); }) : [];
+    var ps = terms.length ? SA.products.filter(function (p) { return hit([p.name, p.id, p.sku || '', p.catName, p.fabricName, p.gsm + ' gsm', p.fit, p.desc, p.colors.map(function (c) { return SA.colors[c].name; }).join(' ')].join(' ')); }) : [];
     var fs = terms.length ? SA.fabrics.filter(function (f) { return hit([f.name, f.composition, f.gsm.join(' gsm ') + ' gsm'].join(' ')); }) : [];
-    $('[data-search-summary]').textContent = terms.length ? (ps.length + ' products and ' + fs.length + ' fabrics for “' + q + '”') : 'Type a style, fabric, colour or weight — for example “oversized 240”.';
+    $('[data-search-summary]').textContent = terms.length ? (ps.length + ' products and ' + fs.length + ' fabrics for “' + q + '”') : 'Type a style, SKU, fabric, colour or weight — for example “oversized 240”.';
     sg.innerHTML = ps.map(cardHTML).join('');
     $('[data-search-fabrics]').innerHTML = fs.length ? '<h2 class="h3" style="margin-bottom:18px">Fabrics</h2><div class="fab-grid">' + fs.map(function (f) { return '<a class="fab" href="/fabrics/' + f.slug + '/"><div class="fab-img"><img src="/assets/img/f/' + f.slug + '-' + f.color + '.svg" alt="" loading="lazy"></div><div class="fab-body"><h3 class="h3">' + esc(f.name) + '</h3><p>' + esc(f.composition) + '</p></div></a>'; }).join('') + '</div>' : '';
   }

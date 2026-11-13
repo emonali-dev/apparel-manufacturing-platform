@@ -3,4 +3,8 @@ Allow: /
 Disallow: /src/
 Disallow: /account/
 Disallow: /admin/
+Disallow: /quotation/
+Disallow: /supabase/
+Disallow: /tests/
+Disallow: /docs/
 Sitemap: https://app.hsdmj.com/sitemap.xml

@@ -2,7 +2,7 @@
 
 International T-shirt design, manufacturing, wholesale and export platform, live at **https://app.hsdmj.com**.
 
-## Current release: public website (Milestone 1)
+## Platform
 
 A static site served by GitHub Pages from this repository's `main` branch.
 
@@ -21,18 +21,30 @@ the `apparel_*` SECURITY DEFINER functions, which check the signed-in user, vali
 
 - **Forms**: every form (contact, service, wholesale, samples, studio, RFQ, newsletter) is saved to the
   database and returns a reference number; WhatsApp (+855 96 733 5609) is offered as a follow-up/fallback.
-- **Buyers** (`/account/`): register, sign in, reset password, company profile, wholesale application,
-  consolidated RFQs (multiple products with colour, fabric, GSM and size quantities), sample requests,
-  status history and messages from the sales team.
-- **Admin** (`/admin/`): overview counts, quotations, orders, samples (courier + tracking), inquiries,
-  buyer verification, and products / fabrics / collections management. Admins are listed in
-  `apparel_admins`. Catalog changes show on the public site immediately (`assets/js/live.mjs`);
-  products added in the admin get a page at `/products/view/?id=…` until the next build.
-- **Notifications**: new requests appear as badges in the admin dashboard. Email notifications are not
-  set up (they need an email provider such as Resend).
+- **Quotation requests** (`/quote/`): 4 steps — buyer details, products (colour, fabric, GSM, size quantities),
+  project details (order type, destination, target date, budget, printing, embroidery, customisation) and
+  artwork upload (JPG, PNG, PDF, AI, PSD; private storage, signed-in buyers). Reference ID, duplicate
+  prevention, confirmation email and admin notification (queued).
+- **Buyers** (`/account/`): overview, quotations (accept / request changes / decline, revisions, printable
+  PDF at `/quotation/?id=…`), orders with production stages and shipments, samples, documents, support
+  messages, delivery addresses, profile & password, wishlist. Verified wholesale buyers see trade prices.
+- **Admin** (`/admin/`), 8 roles (Super Admin, Admin, Sales Manager, Sales Rep, Production Manager,
+  QC Manager, Shipping Manager, Support) — each module shown only to roles that may use it and enforced
+  again in the database: overview metrics (quoted value is kept separate from confirmed order value),
+  quotations (quote builder, quantity tiers, shipping, tax, validity, revisions), orders (13 statuses,
+  payments, documents), production (9 stages) and QC checklists with photos, shipping & export documents,
+  samples, inquiries, buyers with message threads, CRM (leads, pipeline, follow-ups, activity history),
+  suppliers, products (SKU, gallery upload and ordering, wholesale price and tiers, private label,
+  manufacturing notes), fabrics, collections (banner, product assignment, order), website content (hero,
+  announcements, about, contact, FAQ, notification email, FX rates), reports with CSV export, users & roles,
+  email queue and audit log.
+- **Email**: `supabase/functions/apparel-mailer` sends the queued emails through Resend once configured.
+
+Docs: `docs/DEPLOYMENT.md`, `docs/BACKUP_RECOVERY.md`, `docs/TESTING_REPORT.md`, `docs/KNOWN_ISSUES.md`,
+`docs/CREDENTIALS_CHECKLIST.md`, `.env.example`. Tests: `supabase/tests/platform_test.sql`, `tests/e2e/`.
 
 ### What is intentionally not shown
-Prices, MOQs and lead times are "on request" — they are never invented. Product images are
+Public prices, MOQs and lead times are "on request" — they are never invented; wholesale prices entered by staff are shown only to verified buyers. Product images are
 generated garment illustrations until real photography is supplied.
 
 ## Editing content
@@ -47,4 +59,4 @@ python3 -m http.server  # preview at http://localhost:8000
 Commit the generated files together with the source changes.
 
 ## Next milestones
-Factory/production, inventory, export documents and finance modules from the architecture plan.
+Inventory and finance modules; carrier API tracking if a carrier account is provided.

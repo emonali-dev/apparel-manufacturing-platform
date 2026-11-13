@@ -9,13 +9,8 @@ const KEY = 'sa_catalog';
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const svgUrl = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 const known = new Set(SA.products.map((p) => p.id));
-// Fabrics/collections that exist in the database catalog. Items added to the site later
-// (e.g. Fleece, Rib, Polo) stay visible until they are added to the database too.
-const DB_FABRICS = new Set(['100-cotton', 'combed-cotton', 'organic-cotton', 'cotton-polyester', 'french-terry', 'pique', 'polyester-dry-fit', 'modal-blend', 'heavyweight-cotton']);
-const DB_COLLECTIONS = new Set(['essential', 'oversized', 'streetwear', 'premium-cotton', 'graphic', 'sportswear']);
-
-async function catalog() {
-  try {
+async function catalog(fresh) {
+  if (!fresh) try {
     const c = JSON.parse(sessionStorage.getItem(KEY) || 'null');
     if (c && Date.now() - c.t < 5 * 60 * 1000) return c.d;
   } catch (e) { /* ignore */ }
@@ -44,6 +39,9 @@ async function run() {
   let live;
   try { live = await catalog(); } catch (e) { return; } // static pages stay as built
   if (!live || !Array.isArray(live.products)) return;
+  // A product link newer than the cached catalog: fetch a fresh copy once.
+  const wanted = document.querySelector('[data-live-product]') && new URLSearchParams(location.search).get('id');
+  if (wanted && !live.products.some((p) => p.id === wanted)) { try { live = await catalog(true); } catch (e) { /* keep cached */ } }
   const liveIds = new Set(live.products.map((p) => p.id));
   const hidden = new Set(live.hidden || []);
   const liveFabrics = new Set(live.fabrics.map((f) => f.slug));
@@ -57,11 +55,11 @@ async function run() {
   });
   document.querySelectorAll('a.fab[href^="/fabrics/"], a.swatch-tile[href^="/fabrics/"]').forEach((a) => {
     const slug = a.getAttribute('href').split('/')[2];
-    if (slug && DB_FABRICS.has(slug) && !liveFabrics.has(slug)) a.remove();
+    if (slug && !liveFabrics.has(slug)) a.remove();
   });
   document.querySelectorAll('a.coll[href^="/collections/"]').forEach((a) => {
     const slug = a.getAttribute('href').split('/')[2];
-    if (slug && DB_COLLECTIONS.has(slug) && !liveCollections.has(slug)) a.remove();
+    if (slug && !liveCollections.has(slug)) a.remove();
   });
 
   // Product page: unpublished → notice; MOQ / lead time from admin.
@@ -82,7 +80,7 @@ async function run() {
   const extra = live.products.filter((p) => !known.has(p.id));
   extra.forEach((p) => {
     const f = fabricOf(live, p.fabric);
-    window.SA.products.push({ id: p.id, slug: '', name: p.name, cat: p.category, catName: (SA.categories.find((c) => c.slug === p.category) || {}).name || p.category, fabric: p.fabric, fabricName: f.name, comp: f.composition, gsm: p.gsm, fit: p.fit, colors: p.colors, sizes: p.sizes, desc: p.description || '', shape: p.shape, print: p.print || '', finish: p.finish || '', live: true });
+    window.SA.products.push({ id: p.id, sku: p.sku, slug: '', name: p.name, cat: p.category, catName: (SA.categories.find((c) => c.slug === p.category) || {}).name || p.category, fabric: p.fabric, fabricName: f.name, comp: f.composition, gsm: p.gsm, fit: p.fit, colors: p.colors, sizes: p.sizes, desc: p.description || '', shape: p.shape, print: p.print || '', finish: p.finish || '', live: true });
   });
   window.SA_liveImg = (p, c, v) => liveImg({ ...p, shape: p.shape }, c, v);
   document.dispatchEvent(new CustomEvent('sa:live'));
@@ -105,6 +103,89 @@ async function run() {
   // Dynamic product page.
   const dyn = document.querySelector('[data-live-product]');
   if (dyn) renderLiveProduct(dyn, live);
+
+  applyContent(live.content || {});
+  applyMedia(live);
+  applyPrices(live);
+}
+
+/* ---------- admin-managed website content ---------- */
+function applyContent(c) {
+  const get = (path) => path.split('.').reduce((o, k) => (o && o[k] != null ? o[k] : null), c);
+  document.querySelectorAll('[data-cms]').forEach((el) => { const v = get(el.dataset.cms); if (typeof v === 'string' && v.trim()) el.textContent = v.trim(); });
+  document.querySelectorAll('[data-cms-show]').forEach((el) => { const v = get(el.dataset.cmsShow); if (v) el.hidden = false; });
+  document.querySelectorAll('[data-cms-mail]').forEach((el) => { const v = get(el.dataset.cmsMail); if (v) { el.textContent = v; el.href = 'mailto:' + v; } });
+  const ann = document.querySelector('[data-cms-announce] .wrap');
+  const items = (c.announcements && c.announcements.items || []).filter(Boolean).slice(0, 4);
+  if (ann && items.length) ann.innerHTML = items.map((t, i) => `${i ? '<i></i>' : ''}<span${i ? '' : ' class="on"'}>${esc(t)}</span>`).join('');
+  const faq = document.querySelector('[data-cms-faq]');
+  const qa = (c.faq && c.faq.items || []).filter((x) => x && x.q && x.a);
+  if (faq && qa.length) faq.innerHTML = qa.map((x) => `<details class="acc"><summary>${esc(x.q)}</summary><div>${esc(x.a)}</div></details>`).join('');
+}
+
+/* ---------- photos uploaded in the admin ---------- */
+const media = (path) => (/^https?:/.test(path) ? path : SB.publicUrl('apparel-media', path));
+function applyMedia(live) {
+  const byId = new Map(live.products.map((p) => [p.id, p]));
+  document.querySelectorAll('.card[data-id]').forEach((card) => {
+    const p = byId.get(card.getAttribute('data-id'));
+    if (!p || !p.images || !p.images.length) return;
+    const main = card.querySelector('img.main'), alt = card.querySelector('img.alt');
+    if (main) { main.src = media(p.images[0]); main.classList.add('photo'); }
+    if (alt) { if (p.images[1]) { alt.src = media(p.images[1]); alt.classList.add('photo'); } else alt.remove(); }
+  });
+  const pdp = document.querySelector('[data-product]');
+  if (pdp) {
+    const p = byId.get(pdp.getAttribute('data-product'));
+    if (p && p.sku) pdp.querySelectorAll('[data-live-sku]').forEach((el) => { el.textContent = p.sku; });
+    const gal = pdp.querySelector('.gallery');
+    if (p && p.images && p.images.length && gal) {
+      gal.insertAdjacentHTML('afterbegin', p.images.map((im, i) => `<figure class="photo${i ? '' : ' wide'}"><img src="${esc(media(im))}" alt="${esc(p.name)} photo ${i + 1}" loading="${i ? 'lazy' : 'eager'}"></figure>`).join(''));
+    }
+  }
+  // Fabric and collection pages: first uploaded image / banner.
+  const fab = location.pathname.match(/^\/fabrics\/([^/]+)\/$/);
+  if (fab) {
+    const f = live.fabrics.find((x) => x.slug === fab[1]);
+    const hero = document.querySelector('.page-hero--split .swatch-tile img');
+    if (f && f.images && f.images.length && hero) { hero.src = media(f.images[0]); hero.classList.add('photo'); }
+  }
+  const col = location.pathname.match(/^\/collections\/([^/]+)\/$/);
+  if (col) {
+    const c = live.collections.find((x) => x.slug === col[1]);
+    const art = document.querySelector('.page-hero--split .coll');
+    if (c && c.banner && art) art.innerHTML = `<img class="photo coll-banner" src="${esc(media(c.banner))}" alt="${esc(c.name)}">`;
+  }
+  document.querySelectorAll('a.fab[href^="/fabrics/"]').forEach((a) => {
+    const f = live.fabrics.find((x) => x.slug === a.getAttribute('href').split('/')[2]);
+    const im = a.querySelector('img');
+    if (f && f.images && f.images.length && im) { im.src = media(f.images[0]); im.classList.add('photo'); }
+  });
+}
+
+/* ---------- wholesale prices (verified buyers only; enforced by the database) ---------- */
+async function applyPrices(live) {
+  if (!SB.user()) return;
+  let prices;
+  try { prices = await SB.rpc('apparel_buyer_prices'); } catch (e) { return; }
+  if (!prices || !Object.keys(prices).length) return;
+  const fx = live.fx || {};
+  const usd = (v) => 'USD ' + Number(v).toFixed(2);
+  const alt = (v) => ['EUR', 'GBP'].filter((c) => fx[c]).map((c) => `≈ ${c} ${(v * fx[c]).toFixed(2)}`).join(' · ');
+  const from = (pr) => { const all = [pr.wholesale_price].concat((pr.tiers || []).map((t) => t.unit_price)).filter((x) => x != null).map(Number); return all.length ? Math.min(...all) : null; };
+  document.querySelectorAll('.card[data-id]').forEach((card) => {
+    const pr = prices[card.getAttribute('data-id')], el = card.querySelector('.price');
+    const v = pr && from(pr);
+    if (el && v != null) el.textContent = 'Wholesale from ' + usd(v);
+  });
+  const pdp = document.querySelector('[data-product]');
+  const pr = pdp && prices[pdp.getAttribute('data-product')];
+  const box = pdp && pdp.querySelector('.pdp-price');
+  if (pr && box) {
+    const tiers = (pr.tiers || []).slice().sort((a, b) => a.min_qty - b.min_qty);
+    box.innerHTML = `<b>${pr.wholesale_price != null ? usd(pr.wholesale_price) + ' / pc' : 'Volume pricing'}</b><span class="muted" style="font-size:13px">Your verified wholesale price${pr.wholesale_price != null && alt(pr.wholesale_price) ? ' · ' + alt(pr.wholesale_price) : ''}. Final pricing is confirmed on your quotation.</span>` +
+      (tiers.length ? `<table class="data-table tiers"><thead><tr><th>Quantity</th><th class="num">Price / pc</th></tr></thead><tbody>${tiers.map((t) => `<tr><td>${Number(t.min_qty).toLocaleString()}+ pcs</td><td class="num">${usd(t.unit_price)}</td></tr>`).join('')}</tbody></table>` : '');
+  }
 }
 
 function renderLiveProduct(root, live) {
@@ -131,7 +212,7 @@ function renderLiveProduct(root, live) {
 <div class="pdp-block" id="quote"><div class="row"><span class="caps" style="font-size:11px">Quantity by size</span></div><div class="size-grid">${p.sizes.map((s) => `<label>${esc(s)}<input class="input" type="number" min="0" step="1" inputmode="numeric" placeholder="0" data-size="${esc(s)}"></label>`).join('')}</div></div>
 <div class="actions" style="margin-top:8px"><button class="btn" style="flex:1" type="button" data-live-add>Add to quote list</button></div>
 <div class="pdp-more"><a class="btn btn--ghost btn--sm" href="/contact/">Request a sample</a><a class="btn btn--ghost btn--sm" href="/wholesale/#apply">Wholesale inquiry</a></div>
-<dl class="specs"><div><dt>Product ID</dt><dd>${esc(p.id)}</dd></div><div><dt>Fabric</dt><dd>${esc(f.name)} — ${esc(f.composition)}</dd></div><div><dt>Weight</dt><dd>${p.gsm} GSM</dd></div><div><dt>Fit</dt><dd>${esc(p.fit)}</dd></div><div><dt>Sizes</dt><dd>${p.sizes.map(esc).join(' · ')}</dd></div><div><dt>Customisation</dt><dd>Available — print, embroidery, labels, packaging</dd></div><div><dt>MOQ</dt><dd>${esc(p.moq || 'Confirmed with your quotation')}</dd></div><div><dt>Lead time</dt><dd>${esc(p.lead_time || 'Confirmed with your quotation')}</dd></div></dl></div></section>`;
+<dl class="specs"><div><dt>Product ID</dt><dd>${esc(p.id)}</dd></div><div><dt>SKU</dt><dd data-live-sku>${esc(p.sku || '')}</dd></div><div><dt>Fabric</dt><dd>${esc(f.name)} — ${esc(f.composition)}</dd></div><div><dt>Weight</dt><dd>${p.gsm} GSM</dd></div><div><dt>Fit</dt><dd>${esc(p.fit)}</dd></div><div><dt>Sizes</dt><dd>${p.sizes.map(esc).join(' · ')}</dd></div><div><dt>Customisation</dt><dd>Available — print, embroidery, labels, packaging</dd></div><div><dt>MOQ</dt><dd>${esc(p.moq || 'Confirmed with your quotation')}</dd></div><div><dt>Lead time</dt><dd>${esc(p.lead_time || 'Confirmed with your quotation')}</dd></div></dl></div></section>`;
   root.querySelectorAll('[data-live-color]').forEach((b) => b.addEventListener('click', () => {
     color = b.dataset.liveColor;
     root.querySelectorAll('[data-live-color]').forEach((x) => x.setAttribute('aria-pressed', x === b));

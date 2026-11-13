@@ -32,6 +32,35 @@
     SIZES_REQUIRED: 'Select at least one size.',
     INVALID_CATEGORY: 'Choose a category.',
     MESSAGE_REQUIRED: 'Write a message first.',
+    DUPLICATE_REQUEST: 'This request was already sent a moment ago — check your account before sending it again.',
+    INVALID_DATE: 'The target date must be in the future.',
+    INVALID_FILE: 'One of the files could not be attached. Please upload it again.',
+    FILE_NOT_UPLOADED: 'A file did not finish uploading. Please upload it again.',
+    TOO_MANY_FILES: 'Attach up to 10 files per request.',
+    QUOTE_NOT_OPEN: 'This quotation can no longer be changed.',
+    QUOTE_EXPIRED: 'This quotation has expired. Ask us for an updated quotation.',
+    QUOTE_LOCKED: 'This quotation has been sent and can no longer be edited. Create a new revision instead.',
+    QUOTE_EMPTY: 'Add at least one priced line before sending.',
+    DRAFT_EXISTS: 'A draft revision already exists for this request.',
+    LINES_REQUIRED: 'Add at least one line.',
+    INVALID_LINE: 'Each line needs a description, a quantity of at least 1 and a price.',
+    QUOTE_NOT_ACCEPTED: 'The quotation must be sent or accepted before creating an order.',
+    ORDER_EXISTS: 'An order already exists for this quotation.',
+    ADDRESS_FIELDS_REQUIRED: 'Recipient, address line, city and country are required.',
+    TOO_MANY_ADDRESSES: 'You can save up to 10 addresses.',
+    FABRIC_IN_USE: 'This fabric is used by products. Change those products first.',
+    SKU_EXISTS: 'Another product already uses this SKU.',
+    INVALID_SKU: 'SKU may contain letters, numbers and dashes (3–40 characters).',
+    INVALID_TIER: 'Price tiers need a whole minimum quantity and a price.',
+    INVALID_COLLECTION: 'Choose an existing collection.',
+    USER_NOT_FOUND: 'No account exists with that email. Ask them to register first.',
+    CANNOT_REMOVE_SELF: 'You cannot remove or downgrade your own super admin access.',
+    UNKNOWN_STAFF: 'That email is not a staff member.',
+    LEAD_EXISTS: 'A lead with this email already exists.',
+    RESULT_REQUIRED: 'Choose pass or fail.',
+    INVALID_RATE: 'Enter a valid exchange rate.',
+    INVALID_METHOD: 'Choose a shipping method.',
+    NOT_FOUND: 'Record not found.',
     invalid_credentials: 'Email or password is incorrect.',
     user_already_exists: 'An account with this email already exists. Please sign in instead.',
     email_not_confirmed: 'Please confirm your email address first — check your inbox for the link.',
@@ -135,6 +164,31 @@
       history.replaceState(null, '', location.pathname + location.search);
       return { session: tmp, type: h.get('type') };
     },
+    /** Upload a file to Supabase Storage. Path is relative to the bucket. */
+    async upload(bucket, path, file, contentType) {
+      var t = await token();
+      if (!t) throw fail(401, { message: 'NOT_AUTHENTICATED' });
+      var res;
+      try {
+        res = await fetch(URL_ + '/storage/v1/object/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), {
+          method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + t, 'Content-Type': contentType, 'x-upsert': 'false', 'cache-control': '3600' }, body: file,
+        });
+      } catch (e) { var ne = new Error('Upload failed — please check your connection.'); ne.code = 'NETWORK'; throw ne; }
+      if (!res.ok) { var b = null; try { b = await res.json(); } catch (e) { /* ignore */ } throw fail(res.status, b || { message: 'Upload failed (' + res.status + ')' }); }
+      return { path: path };
+    },
+    /** Download a private file the signed-in user is allowed to read; returns a Blob. */
+    async download(bucket, path) {
+      var t = await token();
+      var res = await fetch(URL_ + '/storage/v1/object/authenticated/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'), { headers: { apikey: KEY, Authorization: 'Bearer ' + t } });
+      if (!res.ok) throw fail(res.status, { message: res.status === 404 || res.status === 400 ? 'File not found or not shared with you.' : 'Download failed (' + res.status + ')' });
+      return res.blob();
+    },
+    async remove(bucket, paths) {
+      var t = await token();
+      return http('/storage/v1/object/' + bucket, { method: 'DELETE', body: { prefixes: paths } }, t);
+    },
+    publicUrl: function (bucket, path) { return URL_ + '/storage/v1/object/public/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'); },
     message: function (e) { return (e && e.message) || 'Something went wrong. Please try again.'; },
   };
   window.SB = SB;
