@@ -22,3 +22,13 @@ No horizontal overflow, all images decode, all buttons wired, no JS errors; exis
 
 ## Not testable here
 Live Supabase (connector unavailable), real email delivery (needs Resend), Google Analytics (needs ID).
+
+## v3 homepage, inquiry pipeline and CMS (2026-11-14) — `tests/e2e/v3-inquiry-cms.e2e.mjs` — 30/30 passed
+- Homepage: 13 sections present, 9-step process; gallery and testimonials hidden until real content exists.
+- Wholesale inquiry: required-field validation; saved with inquiry ID; product + quantity extracted; every field stored; admin email queued; duplicate submission blocked.
+- Admin (sales rep): 7 statuses; status, quotation, follow-up date and note saved; history recorded; list shows product, quantity and follow-up.
+- Guest RFQ: product + quantity required when the quote list is empty; general requirements shown in review and saved; no overflow at 390 px.
+- CMS (super admin): gallery photo upload, testimonials, social links (non-https rejected), business email → all appear on the homepage/footer.
+- Product page: GSM, fabric, fit, stitching & finishing, MOQ, printing, embroidery, private label and lead time rows.
+- Regression: database suite (incl. section 11) passed; platform e2e 66/66; site crawl at 1440/360/320 px — 0 failures.
+- Production: migration 09 applied; a rolled-back smoke test on the live database confirmed inquiry insert, product/quantity extraction, admin notification and anon access denial.

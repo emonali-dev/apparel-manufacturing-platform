@@ -361,6 +361,7 @@
     save(QUOTE, all);
     var list = all;
     $('[data-quote-empty]').hidden = list.length > 0;
+    ['Product', 'Quantity'].forEach(function (n) { var el = document.querySelector('.quote-wizard [name="' + n + '"]'); if (el) el.required = !list.length; });
     ql.innerHTML = list.map(function (it, idx) {
       var p = byId[it.id];
       if (!p) return '<div class="q-item q-pending"><div></div><div class="q-body"><span class="card-title">' + esc(it.id) + '</span><p class="hint">Loading product details…</p></div><button class="q-remove" data-q-remove="' + idx + '">Remove</button></div>';
@@ -466,7 +467,7 @@
     }
     function review() {
       var lines = quoteLines();
-      var rows = [['Contact', [get('Contact person'), get('Company'), get('Email')].filter(Boolean).join(' · ')], ['Country', get('Country')], ['Order type', get('Order type')], ['Destination', get('Destination')], ['Target date', get('Target date')], ['Printing', get('Printing')], ['Embroidery', get('Embroidery')]];
+      var rows = [['Contact', [get('Contact person'), get('Company'), get('Email')].filter(Boolean).join(' · ')], ['Country', get('Country')], ['Product', get('Product')], ['Quantity', get('Quantity')], ['GSM', get('Preferred GSM')], ['Fabric', get('Fabric type')], ['Sizes', get('Sizes')], ['Colours', get('Colours')], ['Order type', get('Order type')], ['Destination', get('Destination')], ['Target date', get('Target date')], ['Printing', get('Printing')], ['Embroidery', get('Embroidery')]];
       $('[data-review]').innerHTML = '<h3 class="caps">Review</h3><dl class="specs">' + rows.filter(function (r) { return r[1]; }).map(function (r) { return '<div><dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd></div>'; }).join('') +
         '<div><dt>Products</dt><dd>' + (lines.length ? lines.map(esc).join('<br>') : 'No styles selected — general inquiry') + '</dd></div></dl>';
     }
@@ -511,7 +512,7 @@
           qform.querySelector('[type="submit"]').textContent = 'Sending…';
           var r = await SB.rpc('apparel_submit_rfq', rpcArg({
             order_type: get('Order type'), destination: get('Destination'), target_date: qform.querySelector('[name="Target date"]').value || null,
-            requirements: get('Requirements'), contact_name: get('Contact person'), whatsapp: get('WhatsApp') || get('Phone'), website: get('Website'), country: get('Country'),
+            requirements: [['Product', get('Product')], ['Quantity', get('Quantity')], ['Preferred GSM', get('Preferred GSM')], ['Fabric type', get('Fabric type')], ['Sizes', get('Sizes')], ['Colours', get('Colours')]].filter(function (x) { return x[1]; }).map(function (x) { return x[0] + ': ' + x[1]; }).concat(get('Requirements') ? [get('Requirements')] : []).join('\n'), contact_name: get('Contact person'), whatsapp: get('WhatsApp') || get('Phone'), website: get('Website'), country: get('Country'),
             budget: get('Budget'), printing: get('Printing'), embroidery: get('Embroidery'), customization: get('Customization'), items: items, files: uploaded,
           }));
           res = { code: r.code, tracked: true };

@@ -1,6 +1,7 @@
 # Known issues and limitations
 
-- **Production database not yet migrated.** Migrations 06–08 are tested on a local Postgres 16 with the same RLS/grant model, but they have not been applied to the live Supabase project because the Supabase connection was unavailable. The live site keeps running the previous version until they are applied together with this front end.
+- **No model or factory photography yet.** Product, collection and hero images are studio renders of the garments (front, back, collar detail, fabric macro). They are not photographs of models or of the factory. Upload real photography through Admin → Website content (hero photo, production gallery) and Admin → Products (product photos); the production gallery and testimonials sections stay hidden until genuine content is saved.
+- **Testimonials, client logos and certifications** are not shown because none have been supplied. Add genuine testimonials (with the buyer's permission) in Admin → Website content.
 - **Emails are queued, not sent,** until a Resend key, verified sender domain and the scheduled `apparel-mailer` function are set up (DEPLOYMENT.md §4). Admin → System shows the queue.
 - **Shipment tracking is manual.** Staff enter carrier and tracking number; there is no carrier API integration and the site says so.
 - **WhatsApp is click-to-chat only** (wa.me links with a prefilled message). There is no WhatsApp Business API automation.

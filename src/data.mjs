@@ -171,12 +171,13 @@ export const howItWorks = [
 ];
 
 export const productionSteps = [
-  ['Fabric sourcing & inspection', 'Fabric is checked for weight, shade and defects before cutting.'],
-  ['Pattern & sampling', 'Patterns are developed and a sample approved before bulk.'],
+  ['Design & requirement', 'We confirm the style, artwork, quantities, sizes and target delivery with you in writing.'],
+  ['Fabric selection', 'Composition, GSM and colour are agreed; swatches or lab dips are shared for approval.'],
+  ['Sampling', 'Patterns are developed and a sample is made and approved before bulk production.'],
   ['Cutting', 'Lays are planned and cut by size and colour breakdown.'],
-  ['Sewing', 'Panels are assembled with consistent stitch density and seam finishing.'],
-  ['Printing & embroidery', 'Decoration is applied to approved placements and colours.'],
-  ['Washing & finishing', 'Garment washes, pressing and trimming bring the final hand feel.'],
-  ['Quality inspection', 'Measurements, workmanship and print are inspected against the approved sample.'],
-  ['Packing & dispatch', 'Folded, labelled and packed to your standard, ready for export.'],
+  ['Sewing & stitching', 'Panels are assembled with consistent stitch density and seam finishing.'],
+  ['Printing & embroidery', 'Decoration is applied to the approved placements, colours and techniques.'],
+  ['Quality inspection', 'Measurements, workmanship and decoration are checked against the approved sample.'],
+  ['Packaging', 'Garments are folded, labelled and packed to your standard.'],
+  ['Shipment preparation', 'Cartons, packing list and commercial documents are prepared for dispatch.'],
 ];

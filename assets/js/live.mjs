@@ -73,6 +73,10 @@ async function run() {
     } else {
       if (p.moq) document.querySelectorAll('[data-live-moq]').forEach((el) => { el.textContent = p.moq; });
       if (p.lead_time) document.querySelectorAll('[data-live-lead]').forEach((el) => { el.textContent = p.lead_time; });
+      const set = (sel, v) => document.querySelectorAll(sel).forEach((el) => { el.textContent = v; });
+      if (Array.isArray(p.printing_options) && p.printing_options.length) set('[data-live-print]', p.printing_options.join(', '));
+      if (Array.isArray(p.embroidery_options) && p.embroidery_options.length) set('[data-live-embroidery]', p.embroidery_options.join(', '));
+      if (p.private_label === false) set('[data-live-private]', 'Not offered for this style');
     }
   }
 
@@ -128,6 +132,27 @@ function applyContent(c) {
     heroPhoto.alt = (c.hero.image_alt || 'SIDDIQIYA Apparel campaign');
     heroArt.classList.add('has-photo');
     heroArt.removeAttribute('aria-hidden');
+  }
+  // production gallery (only real photographs uploaded by the team are shown)
+  const gal = document.querySelector('[data-cms-gallery]');
+  const gitems = (c.gallery && c.gallery.items || []).filter((x) => x && x.image).slice(0, 24);
+  if (gal && gitems.length) {
+    gal.querySelector('[data-gallery-grid]').innerHTML = gitems.map((x) => `<figure><img src="${esc(media(x.image))}" alt="${esc(x.caption || 'SIDDIQIYA Apparel production')}" loading="lazy" decoding="async">${x.caption ? `<figcaption>${esc(x.caption)}</figcaption>` : ''}</figure>`).join('');
+    gal.hidden = false;
+  }
+  // buyer testimonials (entered by the team with the buyer's permission)
+  const tst = document.querySelector('[data-cms-testimonials]');
+  const titems = (c.testimonials && c.testimonials.items || []).filter((x) => x && x.quote && x.name).slice(0, 9);
+  if (tst && titems.length) {
+    tst.querySelector('[data-quotes]').innerHTML = titems.map((x) => `<blockquote><p>“${esc(x.quote)}”</p><footer><b>${esc(x.name)}</b>${esc([x.company, x.country].filter(Boolean).join(', '))}</footer></blockquote>`).join('');
+    tst.hidden = false;
+  }
+  const soc = document.querySelector('[data-cms-social]');
+  const NAMES = { instagram: 'Instagram', facebook: 'Facebook', linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube', x: 'X' };
+  const links = Object.entries(c.social || {}).filter(([k, v]) => NAMES[k] && /^https:\/\//.test(v || ''));
+  if (soc && links.length) {
+    soc.innerHTML = links.map(([k, v]) => `<a href="${esc(v)}" target="_blank" rel="noopener me">${NAMES[k]}</a>`).join('');
+    soc.hidden = false;
   }
   const faq = document.querySelector('[data-cms-faq]');
   const qa = (c.faq && c.faq.items || []).filter((x) => x && x.q && x.a);

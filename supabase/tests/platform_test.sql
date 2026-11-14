@@ -203,5 +203,39 @@ do $$ begin
 end $$;
 reset role;
 
+-- 11. guest wholesale inquiry → admin pipeline; CMS gallery / testimonials / social
+select pg_temp.as_user('anon');
+do $$ declare r jsonb; begin
+  r := public.apparel_submit_inquiry('{"kind":"wholesale","subject":"Wholesale inquiry","email":"guest@example.test","contact_name":"Guest","country":"France","details":{"Product":"Oversized T-Shirts","Quantity":"1,200 pcs"}}');
+  insert into t_ids values ('inq', r ->> 'code');
+end $$;
+select pg_temp.expect_error($$select public.apparel_admin_inquiries(null)$$, 'permission denied');
+reset role;
+select pg_temp.as_user('rep');
+do $$ declare l jsonb; i jsonb; begin
+  l := public.apparel_admin_inquiries(null);
+  select x into i from jsonb_array_elements(l) x where x ->> 'code' = (select v from t_ids where k = 'inq');
+  if i ->> 'product' <> 'Oversized T-Shirts' or (i ->> 'quantity')::int <> 1200 then raise exception 'inquiry fields %', i; end if;
+  insert into t_ids values ('inqid', i ->> 'id');
+  perform public.apparel_admin_update_inquiry((i ->> 'id')::bigint, 'quotation_sent', 'Called buyer', 'USD 4.20/pc FOB, 1,200 pcs', current_date + 3);
+  i := (select x from jsonb_array_elements(public.apparel_admin_inquiries('quotation_sent')) x where x ->> 'code' = (select v from t_ids where k = 'inq'));
+  if i ->> 'quotation' is null or jsonb_array_length(i -> 'history') <> 1 then raise exception 'inquiry update %', i; end if;
+end $$;
+select pg_temp.expect_error($$select public.apparel_admin_update_inquiry((select v from t_ids where k = 'inqid')::bigint, 'closed')$$, 'INVALID_STATUS');
+select pg_temp.expect_error($$select public.apparel_admin_save_content('testimonials', '{"items":[]}')$$, 'NOT_AUTHORIZED');
+reset role;
+select pg_temp.as_user('sa');
+select public.apparel_admin_save_content('testimonials', '{"items":[{"quote":"Q","name":"N","company":"C"}]}');
+select public.apparel_admin_save_content('gallery', '{"items":[{"image":"gallery/abc-cutting.jpg","caption":"Cutting room"}]}');
+select public.apparel_admin_save_content('social', '{"instagram":"https://instagram.com/siddiqiya","facebook":""}');
+select pg_temp.expect_error($$select public.apparel_admin_save_content('social', '{"instagram":"javascript:alert(1)"}')$$, 'INVALID_URL');
+select pg_temp.expect_error($$select public.apparel_admin_save_content('gallery', '{"items":[{"image":"../x.jpg"}]}')$$, 'INVALID_FILE');
+reset role;
+select pg_temp.as_user('anon');
+do $$ declare c jsonb := public.apparel_catalog(); begin
+  if c -> 'content' -> 'gallery' -> 'items' -> 0 ->> 'caption' <> 'Cutting room' or c -> 'content' -> 'social' ->> 'instagram' is null then raise exception 'cms content %', c -> 'content'; end if;
+end $$;
+reset role;
+
 select 'ALL PLATFORM TESTS PASSED' as result;
 rollback;

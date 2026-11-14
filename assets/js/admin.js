@@ -21,7 +21,7 @@
   var ST = {
     rfq: ['pending', 'under_review', 'quotation_sent', 'negotiation', 'sample_requested', 'approved', 'rejected', 'cancelled'],
     sample: ['requested', 'approved', 'preparing', 'shipped', 'delivered', 'declined'],
-    inquiry: ['new', 'in_progress', 'closed'],
+    inquiry: ['new', 'reviewing', 'quotation_sent', 'negotiation', 'confirmed', 'completed', 'rejected'],
     buyer: ['pending', 'verified', 'rejected', 'suspended'],
     order: ['received', 'awaiting_confirmation', 'sample_development', 'sample_approved', 'production_pending', 'in_production', 'quality_inspection', 'packing', 'ready_to_ship', 'shipped', 'delivered', 'completed', 'cancelled'],
     payment: ['unpaid', 'deposit_received', 'paid', 'refunded'],
@@ -33,7 +33,7 @@
   };
   var LABEL = {
     pending: 'Pending', under_review: 'Under review', quotation_sent: 'Quotation sent', negotiation: 'Negotiation', sample_requested: 'Sample requested', approved: 'Approved', rejected: 'Rejected', cancelled: 'Cancelled',
-    requested: 'Requested', preparing: 'Preparing', shipped: 'Shipped', delivered: 'Delivered', declined: 'Declined', new: 'New', in_progress: 'In progress', closed: 'Closed',
+    requested: 'Requested', preparing: 'Preparing', shipped: 'Shipped', delivered: 'Delivered', declined: 'Declined', new: 'New', in_progress: 'In progress', closed: 'Closed', reviewing: 'Reviewing', confirmed: 'Confirmed',
     verified: 'Verified', suspended: 'Suspended', received: 'Order received', awaiting_confirmation: 'Awaiting confirmation', sample_development: 'Sample development', sample_approved: 'Sample approved',
     production_pending: 'Production pending', in_production: 'In production', quality_inspection: 'Quality inspection', packing: 'Packing', ready_to_ship: 'Ready to ship', completed: 'Completed',
     unpaid: 'Unpaid', deposit_received: 'Deposit received', paid: 'Paid', refunded: 'Refunded', planned: 'Planned', on_hold: 'On hold', done: 'Done', skipped: 'Skipped',
@@ -489,9 +489,9 @@
   };
   VIEWS.inquiries = async function () {
     var f = filt.inquiries || {};
-    var rows = (await call('apparel_admin_inquiries', { p_status: f.status || null })).filter(function (r) { return matchQ([r.code, r.subject, r.email, r.company, r.contact_name], f.q); });
+    var rows = (await call('apparel_admin_inquiries', { p_status: f.status || null })).filter(function (r) { return matchQ([r.code, r.subject, r.email, r.company, r.contact_name, r.country, r.product, r.phone], f.q); });
     main().innerHTML = head('Sales', 'Inquiries') + filterBar('inquiries', ST.inquiry) +
-      table(['Ref', 'Type', 'Subject', 'From', 'Country', 'Received', 'Status'], rows.map(function (r, i) { return [link(i, r.code, !r.seen_by_admin), esc(r.kind), esc(r.subject), esc(r.contact_name || r.email), esc(r.country || '—'), fmtD(r.created_at), badge(r.status)]; }));
+      table(['Ref', 'Type', 'From', 'Country', 'Product · qty', 'Received', 'Follow-up', 'Status'], rows.map(function (r, i) { var due = r.follow_up && r.follow_up <= new Date().toISOString().slice(0, 10) && ['completed', 'rejected'].indexOf(r.status) < 0; return [link(i, r.code, !r.seen_by_admin), esc(r.kind), esc(r.company || r.contact_name || r.email) + '<br><span class="muted">' + esc(r.subject) + '</span>', esc(r.country || '—'), esc([r.product, r.quantity ? Number(r.quantity).toLocaleString() + ' pcs' : ''].filter(Boolean).join(' · ') || '—'), fmtD(r.created_at), r.follow_up ? (due ? '<span class="status status--new">' + fmtD(r.follow_up) + '</span>' : fmtD(r.follow_up)) : '—', badge(r.status)]; }));
     bindFilter('inquiries');
     $$('[data-open]', root).forEach(function (b) { b.onclick = function () {
       var r = rows[+b.dataset.open], det = r.details || {};
@@ -499,8 +499,8 @@
       drawer('<h2 class="h3">' + esc(r.code) + ' ' + badge(r.status) + '</h2><p class="muted">' + fmt(r.created_at) + ' · ' + esc(r.kind) + '</p>' +
         dl([['Subject', esc(r.subject)], ['Name', esc(r.contact_name)], ['Email', '<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>'], ['Phone', r.phone ? '<a href="https://wa.me/' + esc(String(r.phone).replace(/\D/g, '')) + '" target="_blank" rel="noopener">' + esc(r.phone) + '</a>' : ''], ['Company', esc(r.company)], ['Country', esc(r.country)], ['Message', r.message ? '<span class="pre">' + esc(r.message) + '</span>' : '']]) +
         (Object.keys(det).length ? '<h3 class="caps drawer-h">Submitted details</h3>' + dl(Object.keys(det).map(function (k) { return [esc(k), '<span class="pre">' + esc(det[k]) + '</span>']; })) : '') +
-        '<form class="form" data-detail>' + sel('status', 'Status', ST.inquiry, r.status) + area('note', 'Internal note', r.admin_note, 'maxlength="2000"') + '<button class="btn" type="submit">Save</button></form>',
-      function (d) { var fm = $('[data-detail]', d); submitWith(fm, function () { return call('apparel_admin_update_inquiry', { p_id: r.id, p_status: fm.status.value, p_note: val(fm, 'note') || null }); }); });
+        '<form class="form" data-detail>' + '<div class="form-row">' + sel('status', 'Status', ST.inquiry, r.status) + inp('follow_up', 'Follow-up date', r.follow_up, 'type="date"') + '</div>' + area('quotation', 'Quotation sent (prices, MOQ, lead time, terms)', r.quotation, 'maxlength="4000" rows="4"') + area('note', 'Internal note', r.admin_note, 'maxlength="2000"') + '<button class="btn" type="submit">Save</button></form>' + history(r.history),
+      function (d) { var fm = $('[data-detail]', d); submitWith(fm, function () { return call('apparel_admin_update_inquiry', { p_id: r.id, p_status: fm.status.value, p_note: val(fm, 'note') || null, p_quotation: val(fm, 'quotation') || null, p_follow_up: fm.follow_up.value || null }); }); });
     }; });
   };
 
@@ -705,7 +705,7 @@
   VIEWS.content = async function () {
     var data = await call('apparel_admin_content');
     var c = data.content || {}, fx = data.fx || {};
-    var hero = c.hero || {}, ann = c.announcements || {}, about = c.about || {}, contact = c.contact || {}, faq = c.faq || {}, notify = c.notify || {};
+    var hero = c.hero || {}, ann = c.announcements || {}, about = c.about || {}, contact = c.contact || {}, faq = c.faq || {}, notify = c.notify || {}, gal = c.gallery || {}, tst = c.testimonials || {}, soc = c.social || {};
     main().innerHTML = head('Website', 'Website content') + '<p class="hint" style="margin:-8px 0 24px">Saved content replaces the built-in text on the live website. Leave a field empty to keep the default.</p>' +
       '<div class="content-grid">' +
       '<form class="panel-form form" data-c="hero"><h2 class="h3">Homepage hero</h2>' + inp('title', 'Headline', hero.title, 'maxlength="120" placeholder="Crafting the future of apparel."') + area('subtitle', 'Description', hero.subtitle, 'maxlength="300"') +
@@ -714,11 +714,16 @@
       '<form class="panel-form form" data-c="announcements"><h2 class="h3">Announcement bar</h2>' + area('items', 'Messages (one per line, max 4)', (ann.items || []).join('\n'), 'maxlength="400"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="about"><h2 class="h3">About us</h2>' + area('intro', 'Introduction', about.intro, 'maxlength="1200"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="contact"><h2 class="h3">Contact details</h2>' + inp('whatsapp', 'WhatsApp (display)', contact.whatsapp, 'maxlength="40" placeholder="+855 96 733 5609"') + inp('email', 'Public email', contact.email, 'type="email" maxlength="200"') + area('address', 'Address', contact.address, 'maxlength="300"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
+      '<form class="panel-form form" data-c="gallery"><h2 class="h3">Production gallery</h2>' + mediaPicker('gallery', (gal.items || []).map(function (x) { return x.image; })) + area('captions', 'Captions — one per line, in the same order as the photos', (gal.items || []).map(function (x) { return x.caption || ''; }).join('\n'), 'maxlength="4000" rows="4"') +
+        '<p class="hint">Only upload real photographs of your own production, team or samples. The gallery section stays hidden on the homepage until at least one photo is saved.</p><button class="btn btn--sm" type="submit">Save</button></form>' +
+      '<form class="panel-form form" data-c="testimonials"><h2 class="h3">Buyer testimonials</h2>' + area('items', 'One per line — "Quote | Name | Company | Country"', (tst.items || []).map(function (x) { return [x.quote, x.name, x.company || '', x.country || ''].join(' | '); }).join('\n'), 'maxlength="8000" rows="6"') +
+        '<p class="hint">Publish only genuine feedback, with the buyer\'s permission. The section stays hidden until at least one testimonial is saved.</p><button class="btn btn--sm" type="submit">Save</button></form>' +
+      '<form class="panel-form form" data-c="social"><h2 class="h3">Social media links</h2>' + ['instagram', 'facebook', 'linkedin', 'tiktok', 'youtube'].map(function (k) { return inp(k, k === 'linkedin' ? 'LinkedIn' : k === 'tiktok' ? 'TikTok' : k === 'youtube' ? 'YouTube' : k.charAt(0).toUpperCase() + k.slice(1), soc[k], 'type="url" maxlength="300" placeholder="https://"'); }).join('') + '<p class="hint">Shown in the website footer. Full https:// addresses only.</p><button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="faq"><h2 class="h3">FAQ</h2>' + area('items', 'Questions and answers — "Question? | Answer", one per line', (faq.items || []).map(function (x) { return x.q + ' | ' + x.a; }).join('\n'), 'maxlength="8000" rows="8"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
       (can('settings') ? '<form class="panel-form form" data-c="notify"><h2 class="h3">Admin notifications</h2>' + inp('email', 'Send new-request emails to', notify.email, 'type="email" maxlength="200" required') + '<p class="hint">Emails are queued and sent once the email provider is connected (see System).</p><button class="btn btn--sm" type="submit">Save</button></form>' +
         '<form class="panel-form form" data-fx><h2 class="h3">Display currencies</h2><p class="hint">Used only to show approximate EUR/GBP equivalents. Quotation amounts are never converted.</p><div class="form-row">' + inp('EUR', 'EUR per 1 USD', fx.EUR, 'type="number" min="0" step="0.000001"') + inp('GBP', 'GBP per 1 USD', fx.GBP, 'type="number" min="0" step="0.000001"') + '</div><button class="btn btn--sm" type="submit">Save rates</button></form>' : '') +
       '</div>';
-    bindMedia($('[data-c="hero"]', root));
+    bindMedia($('[data-c="hero"]', root)); bindMedia($('[data-c="gallery"]', root));
     $$('[data-c]', root).forEach(function (f) {
       submitWith(f, function () {
         var k = f.dataset.c, v;
@@ -726,6 +731,9 @@
         else if (k === 'announcements') v = { items: lines(f, 'items').slice(0, 4) };
         else if (k === 'about') v = { intro: val(f, 'intro') };
         else if (k === 'contact') v = { whatsapp: val(f, 'whatsapp'), email: val(f, 'email'), address: val(f, 'address') };
+        else if (k === 'gallery') { var caps = (f.captions.value || '').split('\n'); v = { items: mediaPaths(f).map(function (p, i) { return { image: p, caption: (caps[i] || '').trim() }; }) }; }
+        else if (k === 'testimonials') v = { items: lines(f, 'items').map(function (l) { var p = l.split('|').map(function (x) { return x.trim(); }); return { quote: p[0] || '', name: p[1] || '', company: p[2] || '', country: p[3] || '' }; }).filter(function (x) { return x.quote && x.name; }) };
+        else if (k === 'social') { v = {}; ['instagram', 'facebook', 'linkedin', 'tiktok', 'youtube'].forEach(function (n) { if (val(f, n)) v[n] = val(f, n); }); }
         else if (k === 'faq') v = { items: lines(f, 'items').map(function (l) { var p = l.split('|'); return { q: (p[0] || '').trim(), a: p.slice(1).join('|').trim() }; }).filter(function (x) { return x.q && x.a; }) };
         else v = { email: val(f, 'email') };
         try { sessionStorage.removeItem('sa_catalog'); } catch (x) { /* ignore */ }

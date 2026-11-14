@@ -35,6 +35,8 @@
     DUPLICATE_REQUEST: 'This request was already sent a moment ago — check your account before sending it again.',
     INVALID_DATE: 'The target date must be in the future.',
     INVALID_FILE: 'One of the files could not be attached. Please upload it again.',
+    INVALID_URL: 'Enter full web addresses starting with https://',
+    INVALID_KEY: 'This content section cannot be saved.',
     FILE_NOT_UPLOADED: 'A file did not finish uploading. Please upload it again.',
     TOO_MANY_FILES: 'Attach up to 10 files per request.',
     QUOTE_NOT_OPEN: 'This quotation can no longer be changed.',

@@ -136,7 +136,7 @@ function footer() {
 <div><h4>Products</h4><ul>${categories.slice(0, 7).map((c) => `<li><a href="/categories/${c.slug}/">${c.name}</a></li>`).join('')}<li><a href="/products/">All products</a></li></ul></div>
 <div><h4>Manufacturing</h4><ul><li><a href="/manufacturing/oem-manufacturing/">OEM Manufacturing</a></li><li><a href="/manufacturing/odm-manufacturing/">ODM Manufacturing</a></li><li><a href="/manufacturing/private-label-production/">Private Label</a></li><li><a href="/manufacturing/screen-printing/">Screen Printing</a></li><li><a href="/printing-embroidery/">Printing &amp; embroidery</a></li><li><a href="/custom-design/">Custom Design Studio</a></li><li><a href="/manufacturing/">All services</a></li></ul></div>
 <div><h4>Buyer resources</h4><ul><li><a href="/wholesale/">Wholesale programme</a></li><li><a href="/fabrics/">Fabric library</a></li><li><a href="/premium-fabric-standard/">Premium Fabric Standards</a></li><li><a href="/size-guide/">Size guide</a></li><li><a href="/how-it-works/">How it works</a></li><li><a href="/quality-control/">Quality control</a></li><li><a href="/shipping/">Shipping &amp; export</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/quote/">Request a quote</a></li></ul></div>
-<div><h4>Contact</h4><ul><li>${site.address}</li><li><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">WhatsApp ${site.whatsappDisplay}</a></li><li><a href="/contact/">Contact form</a></li></ul></div>
+<div><h4>Contact</h4><ul><li>${site.address}</li><li><a href="https://wa.me/${site.whatsapp}" target="_blank" rel="noopener">WhatsApp ${site.whatsappDisplay}</a></li><li data-cms-show="contact.email" hidden><a data-cms-mail="contact.email"></a></li><li><a href="/contact/">Contact form</a></li></ul><div class="footer-social" data-cms-social hidden></div></div>
 </div>
 <div class="footer-bottom"><span>© ${new Date().getFullYear()} ${site.brand}. All rights reserved.</span><nav aria-label="Legal"><a href="/privacy/">Privacy Policy</a><a href="/terms/">Terms &amp; Conditions</a><a href="/shipping-policy/">Shipping Policy</a><a href="/refund-policy/">Refund Policy</a></nav></div>
 </div></footer>
@@ -228,44 +228,62 @@ ${['t2', 't1', 't3'].map((t) => { const [w, h] = webpSize(`/assets/img/campaign/
 <section class="section section--panel"><div class="wrap">${head('Featured', 'Bodies buyers build ranges on.', 'Specification first: fabric, weight and fit on every card. Pricing is quoted per order quantity.', `<a class="link" href="/products/">Shop all products ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
 <div class="grid">${featuredList.map(card).join('')}</div></div></section>
 
-<section class="section"><div class="wrap">${head('Fabric excellence', 'It starts with the cloth.', 'Nine fabrics from 140 to 320 GSM. Request physical swatches before you commit to a programme.', `<a class="link" href="/fabrics/">Fabric library ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
-<div class="scroller">${showFabrics.map((s) => { const f = fabBy[s]; return `<a class="swatch-tile rv" href="/fabrics/${f.slug}/"><img src="${fimg(f.slug, f.colors[0], true)}" srcset="${fimg(f.slug, f.colors[0], true)} 450w, ${fimg(f.slug, f.colors[0])} 900w" sizes="(max-width: 640px) 50vw, 33vw" decoding="async" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><span class="cap"><span>${f.gsm[0]}–${f.gsm.at(-1)} GSM</span><b>${f.name}</b></span></a>`; }).join('')}</div><p class="lead" style="margin-top:24px">Need exact fabric specifications and quality targets? <a class="link" href="/premium-fabric-standard/">View Premium Fabric Technical Standards ${I.arrow}</a></p></div></section>
+<section class="section section--panel" id="custom-manufacturing"><div class="wrap">${head('Custom apparel manufacturing', 'Built to your specification.', 'Every order is made to the fabric, weight, colour and finish you approve — confirmed on a sample before bulk production.', `<a class="btn" href="/custom-design/">Start Your Custom Order</a>`)}
+<div class="options-grid rv">${[
+  ['fabric', 'Custom fabric selection', 'Cotton, combed, organic, heavyweight, pique, terry and performance knits.'],
+  ['layers', 'GSM selection', `${gsmOptions[0]} to ${gsmOptions.at(-1)} GSM, matched to the silhouette.`],
+  ['pen', 'Colour customisation', 'Stock colours or custom shades through lab-dip approval.'],
+  ['factory', 'Printing', 'Screen, DTG, DTF, puff and water-based prints.'],
+  ['check', 'Embroidery', 'Flat, 3D puff and patch embroidery.'],
+  ['globe', 'Neck labels', 'Woven, printed or tagless neck labels.'],
+  ['fabric', 'Wash labels', 'Care and composition labels for your markets.'],
+  ['layers', 'Hang tags', 'Branded hang tags with barcodes and pricing.'],
+  ['pen', 'Custom packaging', 'Polybags, tissue, boxes and carton marks.'],
+].map(([i, t, d]) => `<div>${featureIcons[i]}<h3>${t}</h3><p>${d}</p></div>`).join('')}</div></div></section>
 
-<section class="section section--dark"><div class="wrap">${head('Custom manufacturing', 'Your design. Our manufacturing expertise.', 'Three ways to work with us, depending on how much of the product you bring.')}
-<div class="cols-3 rv">
-<div><span class="num">01 — OEM</span><h3>Your design, built to spec</h3><p>You supply the tech pack or reference garment. We source, sample and manufacture exactly to it.</p><ul><li>Tech pack review</li><li>Fabric and trim sourcing</li><li>Pre-production sample</li></ul><a class="link" href="/manufacturing/oem-manufacturing/">OEM inquiry</a></div>
-<div><span class="num">02 — ODM</span><h3>Developed together</h3><p>Bring the idea and the market. We develop the fit, fabric and details with you, then produce it.</p><ul><li>Concept to pattern</li><li>Fit and fabric development</li><li>Sampling rounds</li></ul><a class="link" href="/manufacturing/odm-manufacturing/">ODM inquiry</a></div>
-<div><span class="num">03 — Private Label</span><h3>Our bodies, your brand</h3><p>Choose a proven body from our catalog and finish it with your labels, tags, prints and packaging.</p><ul><li>Neck labels and hang tags</li><li>Print and embroidery</li><li>Branded packaging</li></ul><a class="link" href="/manufacturing/private-label-production/">Private label inquiry</a></div>
+<section class="section section--dark" id="oem-odm"><div class="wrap">${head('OEM / ODM solutions', 'Your design, or developed together.', 'Two ways to bring a product to market with us.')}
+<div class="cols-2 rv">
+<div><span class="num">01 — OEM manufacturing</span><h3>Made to your specification</h3><p>You supply the tech pack, artwork or a reference garment. We source fabric and trims, make a pre-production sample and manufacture to the approved spec.</p><ul><li>Tech pack and measurement review</li><li>Fabric, trim and colour sourcing</li><li>Pre-production sample approval</li><li>Bulk production with inspection</li></ul><a class="link" href="/manufacturing/oem-manufacturing/">OEM manufacturing ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a></div>
+<div><span class="num">02 — ODM solutions</span><h3>Design and development for your brand</h3><p>Bring the idea and the market. We develop the silhouette, fabric, fit and details with you, then produce the approved style.</p><ul><li>Concept and trend direction</li><li>Pattern and fit development</li><li>Sampling rounds</li><li>Production-ready specification</li></ul><a class="link" href="/manufacturing/odm-manufacturing/">ODM solutions ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a></div>
 </div></div></section>
 
-<section class="section"><div class="wrap">${head('Manufacturing excellence', 'Eight stages. One accountable flow.', 'Every production order moves through the same tracked stages, with quality checks before anything ships.', `<a class="link" href="/manufacturing/">Capabilities ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
-<ol class="steps rv">${productionSteps.map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join('')}</ol></div></section>
-
-<section class="section section--panel"><div class="wrap split">
-<div class="rv"><p class="eyebrow">Global wholesale</p><h2 class="h2">Supplying brands, retailers and distributors.</h2><p class="lead" style="margin-top:20px">Apply for a wholesale account to see trade pricing, request samples and place bulk orders with size and colour breakdowns.</p>
-<div class="buyers">${['Fashion Brands', 'Retailers', 'Wholesalers', 'Distributors', 'Importers'].map((b) => `<span>${b}</span>`).join('')}</div>
-<div class="actions"><a class="btn" href="/wholesale/#apply">Apply for wholesale</a><a class="btn btn--ghost" href="/wholesale/">How it works</a></div></div>
-<div class="stat-plate rv"><dl>
-<div><dt>Pricing</dt><dd>Tiered by quantity, shared with verified buyers</dd></div>
-<div><dt>Samples</dt><dd>Available before bulk orders</dd></div>
-<div><dt>Orders</dt><dd>Size and colour breakdown per style</dd></div>
-<div><dt>Documents</dt><dd>Quotation, proforma, packing list, commercial invoice</dd></div>
-<div><dt>Shipping</dt><dd>Incoterms agreed per order</dd></div>
-</dl></div></div></section>
-
-<section class="section"><div class="wrap story">
-<div class="rv"><p class="eyebrow">Our story</p><a class="link" href="/about/">About ${site.short}</a></div>
-<blockquote class="rv">We believe the best T-shirt is the one made <em>with intent</em> — the right fabric, the right weight, finished with care. ${site.brand} brings design, manufacturing and export together so brands can build collections with confidence.</blockquote>
+<section class="section" id="private-label"><div class="wrap split">
+<div class="rv"><p class="eyebrow">Private label production</p><h2 class="h2">Our proven bodies. Your brand.</h2><p class="lead" style="margin-top:18px">Choose a body from the catalogue and finish it entirely under your label — from the neck label to the carton.</p>
+<ul class="ticks"><li>Woven or printed neck labels and wash-care labels</li><li>Hang tags, stickers and barcodes</li><li>Prints and embroidery at your placements</li><li>Branded polybags, boxes and carton marks</li><li>Pre-production sample before bulk</li></ul>
+<div class="actions"><a class="btn" href="/custom-design/">Start Your Custom Order</a><a class="btn btn--ghost" href="/manufacturing/private-label-production/">Private label details</a></div></div>
+<div class="pl-art rv">${productPic(products.find((x) => x.slug === 'everyday-crew-tee'), 'bone', 'front', 'Everyday Crew Tee finished with a woven hem label and chest wordmark', { sizes: '(max-width: 760px) 90vw, 45vw' })}${productPic(products.find((x) => x.slug === 'box-oversized-tee'), 'black', 'detail', 'Rib collar and stitching detail', { cls: 'pl-detail', sizes: '(max-width: 760px) 45vw, 20vw' })}</div>
 </div></section>
 
-<section class="section section--panel"><div class="wrap">${head('Why choose us', 'Built for buyers who notice the details.')}
+<section class="section section--panel" id="process"><div class="wrap">${head('Manufacturing excellence', 'Nine stages. One accountable flow.', 'Every production order moves through the same tracked stages, with quality checks before anything ships.', `<a class="link" href="/manufacturing/">Capabilities ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
+<ol class="steps rv">${productionSteps.map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join('')}</ol></div></section>
+
+<section class="section"><div class="wrap">${head('Fabric & quality standards', 'It starts with the cloth.', 'Nine fabrics from 140 to 320 GSM. Request physical swatches before you commit to a programme.', `<a class="link" href="/fabrics/">Fabric library ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
+<div class="scroller">${showFabrics.map((s) => { const f = fabBy[s]; return `<a class="swatch-tile rv" href="/fabrics/${f.slug}/"><img src="${fimg(f.slug, f.colors[0], true)}" srcset="${fimg(f.slug, f.colors[0], true)} 450w, ${fimg(f.slug, f.colors[0])} 900w" sizes="(max-width: 640px) 50vw, 33vw" decoding="async" alt="${f.name} fabric close-up" width="400" height="400" loading="lazy"><span class="cap"><span>${f.gsm[0]}–${f.gsm.at(-1)} GSM</span><b>${f.name}</b></span></a>`; }).join('')}</div><p class="lead" style="margin-top:28px;font-size:16px">Need exact fabric specifications and quality targets? <a href="/premium-fabric-standard/" style="text-decoration:underline;text-underline-offset:4px;white-space:nowrap">View the Fabric Technical Standards →</a></p></div></section>
+
+<section class="section"><div class="wrap">${head('Why choose us', 'Built for buyers who notice the details.')}
 <div class="feature-list rv">${why.map(([i, t, d]) => `<div>${featureIcons[i]}<h3>${t}</h3><p>${d}</p></div>`).join('')}</div></div></section>
 
-<section class="section"><div class="wrap">${head('How it works', 'From first request to delivery.', 'Six clear steps, with a sample approved before any bulk production.', `<a class="link" href="/how-it-works/">The full process ${I.arrow.replace('<svg', '<svg width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:1.5"')}</a>`)}
-<ol class="steps steps--6 rv">${howItWorks.map(([b, t]) => `<li><b>${b}</b><span>${t}</span></li>`).join('')}</ol></div></section>
+<section class="section section--panel" id="gallery" data-cms-gallery hidden><div class="wrap">${head('Manufacturing & production gallery', 'Inside our production.', 'Photographs from our production floor and quality checks.')}
+<div class="gallery-grid" data-gallery-grid></div></div></section>
 
-<section class="section section--black cta-final"><div class="wrap rv"><p class="eyebrow">Start a project</p><h2 class="h1">Let's create something exceptional.</h2>
-<div class="actions"><a class="btn btn--light" href="/custom-design/">Start Your Project</a><a class="btn btn--outline-light" href="/quote/">Request a Quote</a></div></div></section>`,
+<section class="section" id="testimonials" data-cms-testimonials hidden><div class="wrap">${head('Buyer testimonials', 'What our buyers say.')}
+<div class="quotes" data-quotes></div></div></section>
+
+<section class="section section--dark" id="wholesale-inquiry"><div class="wrap split split--form">
+<div class="rv"><p class="eyebrow">International wholesale</p><h2 class="h2">Tell us what you need. We reply with a quotation.</h2><p class="lead" style="margin-top:18px">For brands, retailers, distributors and importers. Your inquiry is saved with a reference number and sent straight to our sales team.</p>
+<dl class="stat-plate stat-plate--dark"><div><dt>Pricing</dt><dd>Tiered by quantity, shared with verified buyers</dd></div><div><dt>Samples</dt><dd>Available before bulk orders</dd></div><div><dt>Documents</dt><dd>Quotation, proforma, packing list, commercial invoice</dd></div><div><dt>Shipping</dt><dd>Incoterms agreed per order</dd></div></dl>
+<p class="muted" style="margin-top:20px">Prefer to attach artwork or a tech pack? Use the <a class="link" href="/quote/">full quotation form</a>.</p></div>
+<form class="panel-form form rv" data-wa="Wholesale inquiry" data-kind="wholesale" novalidate><h3 class="h3">Wholesale inquiry</h3>
+<div class="form-row">${field('Contact person', 'Full name', { req: true, auto: 'name' })}${field('Company', 'Company name', { req: true, auto: 'organization' })}</div>
+<div class="form-row">${field('Email', 'Business email', { type: 'email', req: true, auto: 'email' })}${field('Phone', 'WhatsApp number', { type: 'tel', req: true, auto: 'tel', ph: '+44 7700 900000' })}</div>
+<div class="form-row">${field('Country', 'Country', { req: true, opts: countries })}${field('Product', 'Product', { req: true, opts: categories.map((c) => c.name) })}</div>
+<div class="form-row">${field('Quantity', 'Required quantity', { req: true, ph: 'e.g. 1,200 pcs' })}${field('Preferred GSM', 'Preferred GSM', { opts: gsmOptions.map((g) => g + ' GSM') })}</div>
+<div class="form-row">${field('Fabric type', 'Fabric type', { opts: fabrics.map((f) => f.name) })}${field('Sizes', 'Sizes', { ph: 'e.g. S–XXL' })}</div>
+${field('Colours', 'Colour preferences', { ph: 'e.g. black, bone, olive' })}
+${field('Customization', 'Customisation requirements', { type: 'textarea', ph: 'Print, embroidery, labels, packaging…' })}
+${field('Message', 'Additional message', { type: 'textarea' })}
+${waNote}<button class="btn btn--block" type="submit">Send inquiry</button></form>
+</div></section>`,
   });
 }
 
@@ -359,7 +377,9 @@ for (const p of products) {
 <dl class="specs">
 <div><dt>Product ID</dt><dd>${p.id}</dd></div><div><dt>SKU</dt><dd data-live-sku>${p.sku}</dd></div><div><dt>Fabric</dt><dd><a href="/fabrics/${f.slug}/" style="text-decoration:underline">${f.name}</a> — ${f.composition}</dd></div>
 <div><dt>Weight</dt><dd>${p.gsm} GSM (other weights: ${f.gsm.join(', ')})</dd></div><div><dt>Fit</dt><dd>${p.fit}</dd></div>
-<div><dt>Design</dt><dd>${decoration(p)}</dd></div><div><dt>Sizes</dt><dd>${p.sizes.join(' · ')}</dd></div><div><dt>Customisation</dt><dd>Available — print, embroidery, labels, packaging</dd></div>
+<div><dt>Design</dt><dd>${decoration(p)}</dd></div><div><dt>Sizes</dt><dd>${p.sizes.join(' · ')}</dd></div><div><dt>Stitching &amp; finishing</dt><dd>Neck, seam and hem construction specified in your tech pack and approved on the pre-production sample</dd></div>
+<div><dt>Printing</dt><dd data-live-print>Screen, DTG and DTF printing</dd></div><div><dt>Embroidery</dt><dd data-live-embroidery>Flat, 3D puff and patch embroidery</dd></div>
+<div><dt>Private label</dt><dd data-live-private>Neck labels, wash labels, hang tags and packaging with your brand</dd></div>
 <div><dt>MOQ</dt><dd data-live-moq>Confirmed with your quotation</dd></div><div><dt>Lead time</dt><dd data-live-lead>Confirmed with your quotation</dd></div><div><dt>Availability</dt><dd>Made to order</dd></div>
 </dl>
 <details class="acc" id="size-chart"><summary>Size chart</summary><div>${sizeRef(p.fit)}</div></details>
@@ -461,7 +481,7 @@ page({
   body: `<section class="page-hero"><div class="wrap">${crumbs([['/', 'Home'], ['', 'Manufacturing']])}<p class="eyebrow">Manufacturing</p><h1 class="h1">From tech pack to packed carton.</h1><p class="lead">OEM, ODM and private label production, supported by in-house branding, decoration and development services.</p></div></section>
 <section class="section section--dark"><div class="wrap"><div class="cols-3">${['oem-manufacturing', 'odm-manufacturing', 'private-label-production'].map((s, i) => { const v = services.find((x) => x.slug === s); return `<div><span class="num">0${i + 1}</span><h3>${v.name}</h3><p>${v.text}</p><a class="link" href="/manufacturing/${v.slug}/">Start an inquiry</a></div>`; }).join('')}</div></div></section>
 <section class="section"><div class="wrap">${groups.filter((g) => g !== 'Manufacturing').map((g) => `<div style="margin-bottom:56px">${head('Services', g)}<div class="fab-grid">${services.filter((s) => s.group === g).map((s) => `<a class="fab rv" href="/manufacturing/${s.slug}/"><div class="fab-body"><span class="eyebrow" style="display:block;margin-bottom:10px">${g}</span><h2 class="h3">${s.name}</h2><p>${s.text}</p><span class="link">Inquire</span></div></a>`).join('')}</div></div>`).join('')}</div></section>
-<section class="section section--panel"><div class="wrap">${head('Process', 'Eight stages, tracked end to end.', 'Each production order carries its own size and colour breakdown, assigned team and quality status through every stage.')}<ol class="steps">${productionSteps.map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join('')}</ol></div></section>
+<section class="section section--panel"><div class="wrap">${head('Process', 'Nine stages, tracked end to end.', 'Each production order carries its own size and colour breakdown, assigned team and quality status through every stage.')}<ol class="steps">${productionSteps.map(([b, s]) => `<li><b>${b}</b><span>${s}</span></li>`).join('')}</ol></div></section>
 <section class="section"><div class="wrap split"><div><p class="eyebrow">Quality</p><h2 class="h2">Inspected against your approved sample.</h2><p class="lead" style="margin-top:18px">Fabric is checked on arrival, workmanship is checked in-line, and finished goods are inspected for measurements, print and finish before packing.</p></div>
 <div class="stat-plate"><dl><div><dt>Fabric</dt><dd>Weight, shade and defect inspection before cutting</dd></div><div><dt>In-line</dt><dd>Seam, stitch and print checks during production</dd></div><div><dt>Final</dt><dd>Measurement, workmanship and packing inspection</dd></div><div><dt>Reports</dt><dd>Inspection results shared with the buyer on request</dd></div></dl></div></div></section>`,
 });
@@ -514,7 +534,11 @@ page({
 <div class="form-row">${field('WhatsApp', 'WhatsApp number', { type: 'tel', ph: '+1 555 010 2030' })}${field('Website', 'Company website', { type: 'url', ph: 'https://' })}</div></fieldset>
 <fieldset data-step="2" hidden><legend class="h3">Product requirements</legend><p class="hint" style="margin:0">Choose colour, fabric, GSM and quantity per size for each style. Leave quantities empty if you are not sure yet.</p>
 <div data-quote-list></div><p class="empty" data-quote-empty hidden style="text-align:left;padding:20px 0">No styles added yet. <a class="link" href="/products/">Browse products</a> and choose “Add to quote list”, or continue to describe what you need.</p>
-<a class="btn btn--ghost btn--sm" href="/products/">Add more products</a></fieldset>
+<a class="btn btn--ghost btn--sm" href="/products/">Add more products</a>
+<h3 class="caps" style="margin-top:28px">General requirements</h3><p class="hint" style="margin:0 0 4px" data-general-hint>Tell us the product and quantity if you have not added styles above.</p>
+<div class="form-row">${field('Product', 'Product', { opts: categories.map((c) => c.name) })}${field('Quantity', 'Required quantity (pieces)', { type: 'number', ph: 'e.g. 1200' })}</div>
+<div class="form-row">${field('Preferred GSM', 'Preferred GSM', { opts: gsmOptions.map((g) => g + ' GSM') })}${field('Fabric type', 'Fabric type', { opts: fabrics.map((f) => f.name) })}</div>
+<div class="form-row">${field('Sizes', 'Sizes', { ph: 'e.g. S–XXL' })}${field('Colours', 'Colour preferences', { ph: 'e.g. black, bone, olive' })}</div></fieldset>
 <fieldset data-step="3" hidden><legend class="h3">Project details</legend>
 <div class="form-row">${field('Order type', 'Order type', { req: true, opts: ['Sample order', 'Bulk order', 'Private label', 'Custom design', 'Not sure yet'] })}${field('Destination', 'Delivery destination', { ph: 'City, country' })}</div>
 <div class="form-row">${field('Target date', 'Target delivery date', { type: 'date' })}${field('Budget', 'Budget range (optional)', { opts: ['Under USD 2,000', 'USD 2,000–10,000', 'USD 10,000–50,000', 'Over USD 50,000', 'Prefer not to say'] })}</div>
