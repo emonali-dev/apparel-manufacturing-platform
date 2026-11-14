@@ -119,13 +119,15 @@ function applyContent(c) {
   const items = (c.announcements && c.announcements.items || []).filter(Boolean).slice(0, 4);
   if (ann && items.length) ann.innerHTML = items.map((t, i) => `${i ? '<i></i>' : ''}<span${i ? '' : ' class="on"'}>${esc(t)}</span>`).join('');
   const heroImg = c.hero && c.hero.image;
-  const heroPhoto = document.querySelector('[data-cms-hero-photo]');
-  if (heroImg && heroPhoto) {
+  const heroArt = document.querySelector('[data-hero-art]');
+  if (heroImg && heroArt) {
+    const heroPhoto = document.createElement('img');
+    heroPhoto.className = 'hero-photo';
+    heroArt.appendChild(heroPhoto);
     heroPhoto.src = /^https:/.test(heroImg) ? heroImg : SB.publicUrl('apparel-media', heroImg);
     heroPhoto.alt = (c.hero.image_alt || 'SIDDIQIYA Apparel campaign');
-    heroPhoto.hidden = false;
-    heroPhoto.closest('[data-hero-art]').classList.add('has-photo');
-    heroPhoto.closest('[data-hero-art]').removeAttribute('aria-hidden');
+    heroArt.classList.add('has-photo');
+    heroArt.removeAttribute('aria-hidden');
   }
   const faq = document.querySelector('[data-cms-faq]');
   const qa = (c.faq && c.faq.items || []).filter((x) => x && x.q && x.a);

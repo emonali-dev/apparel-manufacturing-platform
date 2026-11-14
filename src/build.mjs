@@ -23,7 +23,7 @@ const fabBy = Object.fromEntries(fabrics.map((f) => [f.slug, f]));
 const shapeOf = (p) => catBy[p.cat].shape;
 
 // Clean previous output
-for (const d of ['how-it-works', 'quality-control', 'printing-embroidery', 'shipping-policy', 'refund-policy', 'account', 'admin', 'quotation', 'products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping', 'assets/img']) {
+for (const d of ['how-it-works', 'quality-control', 'printing-embroidery', 'shipping-policy', 'refund-policy', 'account', 'admin', 'quotation', 'products', 'categories', 'collections', 'fabrics', 'manufacturing', 'wholesale', 'custom-design', 'quote', 'wishlist', 'search', 'about', 'contact', 'privacy', 'terms', 'faq', 'size-guide', 'shipping']) {
   fs.rmSync(path.join(ROOT, d), { recursive: true, force: true });
 }
 
@@ -219,7 +219,6 @@ const contactFields = `<div class="form-row">${field('Contact person', 'Contact 
 <div class="actions"><a class="btn btn--light" href="/collections/">Explore Collections</a><a class="btn btn--outline-light" href="/custom-design/">Start Your Custom Order</a></div></div>
 <div class="hero-art rv" data-hero-art aria-hidden="true"><div class="plate"></div>
 ${['t2', 't1', 't3'].map((t) => { const [w, h] = webpSize(`/assets/img/campaign/hero-${t}.webp`); return `<img class="${t}" src="/assets/img/campaign/hero-${t}-sm.webp" srcset="/assets/img/campaign/hero-${t}-sm.webp 500w, /assets/img/campaign/hero-${t}.webp 900w" sizes="(max-width: 900px) 60vw, 380px" alt="" width="${w}" height="${h}"${t === 't3' ? ' loading="lazy"' : ' fetchpriority="high"'} decoding="async">`; }).join('\n')}
-<img class="hero-photo" data-cms-hero-photo alt="" hidden>
 <span class="tag a">Heavyweight · 280 GSM</span><span class="tag b">Private label ready</span></div>
 </div><div class="hero-meta"><span>T-Shirts · Private Label · OEM / ODM</span><span>Phnom Penh — Worldwide</span></div></section>
 
