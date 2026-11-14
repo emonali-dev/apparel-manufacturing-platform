@@ -52,7 +52,7 @@ git push origin main               # GitHub Pages publishes within ~1 minute
 2. Set secrets (from your own terminal, not in chat):
    ```
    supabase secrets set RESEND_API_KEY=re_xxx MAIL_FROM="SIDDIQIYA Apparel <sales@yourdomain>" MAILER_SECRET=<random>
-   supabase functions deploy apparel-mailer --no-verify-jwt
+   # (apparel-mailer is already deployed; it answers 403 until MAILER_SECRET is set)
    ```
 3. Schedule the worker every minute (SQL editor; uses pg_cron + pg_net):
    ```sql
