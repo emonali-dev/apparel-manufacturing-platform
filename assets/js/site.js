@@ -8,7 +8,8 @@
   var byId = {};
   SA.products.forEach(function (p) { byId[p.id] = p; });
   var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var img = function (p, c, v) { return p.live && window.SA_liveImg ? window.SA_liveImg(p, c, v) : '/assets/img/p/' + p.slug + '-' + c + '-' + (v || 'front') + '.svg'; };
+  var img = function (p, c, v) { return p.live && window.SA_liveImg ? window.SA_liveImg(p, c, v) : '/assets/img/products/' + p.slug + '/' + c + '-' + (v || 'front') + '-sm.webp'; };
+  var imgFull = function (p, c, v) { return p.live && window.SA_liveImg ? window.SA_liveImg(p, c, v) : '/assets/img/products/' + p.slug + '/' + c + '-' + v + '.webp'; };
   var pHref = function (p) { return p.live ? '/products/view/?id=' + encodeURIComponent(p.id) : '/products/' + p.slug + '/'; };
 
   /* ---------- storage ---------- */
@@ -280,8 +281,7 @@
         current = b.getAttribute('data-color');
         $$('.color-btn', pdp).forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
         $('[data-color-name]').textContent = SA.colors[current].name;
-        ['front', 'back', 'side', 'neck'].forEach(function (v) { $('[data-view="' + v + '"]').src = img(P, current, v); });
-        $('[data-view="fabric"]').src = '/assets/img/f/' + P.fabric + '-' + current + '.svg';
+        ['front', 'back', 'detail', 'fabric'].forEach(function (v) { var el = $('[data-view="' + v + '"]'); if (el) el.src = imgFull(P, current, v); });
       });
     });
     var addBtn = $('[data-add-detail]');
@@ -296,6 +296,7 @@
       if (bad) { toast('Quantities must be whole numbers.'); return; }
       addToQuote(P.id, current, sizes);
       $$('[data-size]', pdp).forEach(function (i) { i.value = ''; });
+      setTimeout(function () { location.href = '/quote/'; }, 450);
     });
   }
 
@@ -550,7 +551,7 @@
     var fs = terms.length ? SA.fabrics.filter(function (f) { return hit([f.name, f.composition, f.gsm.join(' gsm ') + ' gsm'].join(' ')); }) : [];
     $('[data-search-summary]').textContent = terms.length ? (ps.length + ' products and ' + fs.length + ' fabrics for “' + q + '”') : 'Type a style, SKU, fabric, colour or weight — for example “oversized 240”.';
     sg.innerHTML = ps.map(cardHTML).join('');
-    $('[data-search-fabrics]').innerHTML = fs.length ? '<h2 class="h3" style="margin-bottom:18px">Fabrics</h2><div class="fab-grid">' + fs.map(function (f) { return '<a class="fab" href="/fabrics/' + f.slug + '/"><div class="fab-img"><img src="/assets/img/f/' + f.slug + '-' + f.color + '.svg" alt="" loading="lazy"></div><div class="fab-body"><h3 class="h3">' + esc(f.name) + '</h3><p>' + esc(f.composition) + '</p></div></a>'; }).join('') + '</div>' : '';
+    $('[data-search-fabrics]').innerHTML = fs.length ? '<h2 class="h3" style="margin-bottom:18px">Fabrics</h2><div class="fab-grid">' + fs.map(function (f) { return '<a class="fab" href="/fabrics/' + f.slug + '/"><div class="fab-img"><img src="/assets/img/fabrics/' + f.slug + '-' + f.color + '-sm.webp" alt="" loading="lazy" decoding="async"></div><div class="fab-body"><h3 class="h3">' + esc(f.name) + '</h3><p>' + esc(f.composition) + '</p></div></a>'; }).join('') + '</div>' : '';
   }
 
   document.addEventListener('sa:live', function () {

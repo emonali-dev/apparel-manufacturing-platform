@@ -23,7 +23,7 @@ const fabricOf = (live, slug) => live.fabrics.find((f) => f.slug === slug) || SA
 const colorHex = (k) => (SA.colors[k] || SA.colors.bone).hex;
 function liveImg(p, color, view = 'front') {
   const o = { shape: p.shape, color: colorHex(color), print: p.print || '', finish: p.finish || '', uid: view[0] + p.id.replace(/\D/g, '') };
-  return svgUrl(view === 'side' ? teeSideSVG(o) : teeSVG({ ...o, view: view === 'neck' ? 'front' : view, crop: view === 'neck' }));
+  return svgUrl(view === 'side' ? teeSideSVG(o) : teeSVG({ ...o, view: view === 'neck' || view === 'detail' ? 'front' : view, crop: view === 'neck' || view === 'detail' }));
 }
 function liveCard(p, live) {
   const f = fabricOf(live, p.fabric);
@@ -118,6 +118,15 @@ function applyContent(c) {
   const ann = document.querySelector('[data-cms-announce] .wrap');
   const items = (c.announcements && c.announcements.items || []).filter(Boolean).slice(0, 4);
   if (ann && items.length) ann.innerHTML = items.map((t, i) => `${i ? '<i></i>' : ''}<span${i ? '' : ' class="on"'}>${esc(t)}</span>`).join('');
+  const heroImg = c.hero && c.hero.image;
+  const heroPhoto = document.querySelector('[data-cms-hero-photo]');
+  if (heroImg && heroPhoto) {
+    heroPhoto.src = /^https:/.test(heroImg) ? heroImg : SB.publicUrl('apparel-media', heroImg);
+    heroPhoto.alt = (c.hero.image_alt || 'SIDDIQIYA Apparel campaign');
+    heroPhoto.hidden = false;
+    heroPhoto.closest('[data-hero-art]').classList.add('has-photo');
+    heroPhoto.closest('[data-hero-art]').removeAttribute('aria-hidden');
+  }
   const faq = document.querySelector('[data-cms-faq]');
   const qa = (c.faq && c.faq.items || []).filter((x) => x && x.q && x.a);
   if (faq && qa.length) faq.innerHTML = qa.map((x) => `<details class="acc"><summary>${esc(x.q)}</summary><div>${esc(x.a)}</div></details>`).join('');
@@ -202,7 +211,7 @@ function renderLiveProduct(root, live) {
   const cat = SA.categories.find((c) => c.slug === p.category) || { name: p.category };
   document.title = `${p.name} | SIDDIQIYA Apparel`;
   let color = p.colors[0];
-  const views = [['front', 'Front'], ['back', 'Back'], ['side', 'Side'], ['neck', 'Neck detail']];
+  const views = [['front', 'Front'], ['back', 'Back'], ['detail', 'Collar & stitching']];
   const swatch = (c) => svgUrl(fabricSVG({ texture: f.texture || 'jersey', color: colorHex(c), uid: 'lf' }));
   root.innerHTML = `<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/products/">Products</a><span aria-hidden="true">/</span><a href="/categories/${esc(p.category)}/">${esc(cat.name)}</a><span aria-hidden="true">/</span><span aria-current="page">${esc(p.name)}</span></nav>
 <section class="pdp" data-product="${esc(p.id)}"><div class="gallery">${views.map(([v, l]) => `<figure><img data-view="${v}" src="${liveImg(p, color, v)}" alt="${esc(p.name)} ${l.toLowerCase()}" width="400" height="440"><figcaption>${l}</figcaption></figure>`).join('')}<figure class="fabric wide"><img data-view="fabric" src="${swatch(color)}" alt="${esc(f.name)} close-up"><figcaption>Fabric close-up</figcaption></figure></div>

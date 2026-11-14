@@ -708,7 +708,9 @@
     var hero = c.hero || {}, ann = c.announcements || {}, about = c.about || {}, contact = c.contact || {}, faq = c.faq || {}, notify = c.notify || {};
     main().innerHTML = head('Website', 'Website content') + '<p class="hint" style="margin:-8px 0 24px">Saved content replaces the built-in text on the live website. Leave a field empty to keep the default.</p>' +
       '<div class="content-grid">' +
-      '<form class="panel-form form" data-c="hero"><h2 class="h3">Homepage hero</h2>' + inp('title', 'Headline', hero.title, 'maxlength="120" placeholder="Crafting the future of apparel."') + area('subtitle', 'Description', hero.subtitle, 'maxlength="300"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
+      '<form class="panel-form form" data-c="hero"><h2 class="h3">Homepage hero</h2>' + inp('title', 'Headline', hero.title, 'maxlength="120" placeholder="Crafting the future of apparel."') + area('subtitle', 'Description', hero.subtitle, 'maxlength="300"') +
+        mediaPicker('campaign', hero.image ? [hero.image] : []) + inp('image_alt', 'Photo description (for accessibility)', hero.image_alt, 'maxlength="160" placeholder="Model wearing the Box Oversized Tee in bone"') +
+        '<p class="hint">Optional campaign photo (your own or licensed photography). It replaces the rendered garments in the homepage hero. Use a portrait image, at least 1200 px wide.</p><button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="announcements"><h2 class="h3">Announcement bar</h2>' + area('items', 'Messages (one per line, max 4)', (ann.items || []).join('\n'), 'maxlength="400"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="about"><h2 class="h3">About us</h2>' + area('intro', 'Introduction', about.intro, 'maxlength="1200"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
       '<form class="panel-form form" data-c="contact"><h2 class="h3">Contact details</h2>' + inp('whatsapp', 'WhatsApp (display)', contact.whatsapp, 'maxlength="40" placeholder="+855 96 733 5609"') + inp('email', 'Public email', contact.email, 'type="email" maxlength="200"') + area('address', 'Address', contact.address, 'maxlength="300"') + '<button class="btn btn--sm" type="submit">Save</button></form>' +
@@ -716,10 +718,11 @@
       (can('settings') ? '<form class="panel-form form" data-c="notify"><h2 class="h3">Admin notifications</h2>' + inp('email', 'Send new-request emails to', notify.email, 'type="email" maxlength="200" required') + '<p class="hint">Emails are queued and sent once the email provider is connected (see System).</p><button class="btn btn--sm" type="submit">Save</button></form>' +
         '<form class="panel-form form" data-fx><h2 class="h3">Display currencies</h2><p class="hint">Used only to show approximate EUR/GBP equivalents. Quotation amounts are never converted.</p><div class="form-row">' + inp('EUR', 'EUR per 1 USD', fx.EUR, 'type="number" min="0" step="0.000001"') + inp('GBP', 'GBP per 1 USD', fx.GBP, 'type="number" min="0" step="0.000001"') + '</div><button class="btn btn--sm" type="submit">Save rates</button></form>' : '') +
       '</div>';
+    bindMedia($('[data-c="hero"]', root));
     $$('[data-c]', root).forEach(function (f) {
       submitWith(f, function () {
         var k = f.dataset.c, v;
-        if (k === 'hero') v = { title: val(f, 'title'), subtitle: val(f, 'subtitle') };
+        if (k === 'hero') v = { title: val(f, 'title'), subtitle: val(f, 'subtitle'), image: mediaPaths(f)[0] || null, image_alt: val(f, 'image_alt') };
         else if (k === 'announcements') v = { items: lines(f, 'items').slice(0, 4) };
         else if (k === 'about') v = { intro: val(f, 'intro') };
         else if (k === 'contact') v = { whatsapp: val(f, 'whatsapp'), email: val(f, 'email'), address: val(f, 'address') };
