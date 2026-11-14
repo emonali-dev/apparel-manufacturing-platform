@@ -59,6 +59,14 @@ function printArt(kind, ink, view, cx, cy) {
     return '';
   }
   switch (kind) {
+    case 'atelier':
+      return `<g fill="none" stroke="${ink}" stroke-width="2"><circle cx="${cx}" cy="${cy+8}" r="24"/><path d="M${cx-15} ${cy+8}h30M${cx} ${cy-7}v30"/></g><text x="${cx}" y="${cy+55}" text-anchor="middle" ${f} font-weight="700" font-size="8" letter-spacing="5" fill="${ink}">ATELIER 01</text>`;
+    case 'topography':
+      return `<g fill="none" stroke="${ink}" stroke-width="1.8" opacity=".9"><path d="M${cx-62} ${cy+28}c18-55 106-55 124 0M${cx-48} ${cy+28}c14-39 82-39 96 0M${cx-34} ${cy+28}c10-24 58-24 68 0M${cx-62} ${cy+38}h124"/></g><text x="${cx}" y="${cy+62}" text-anchor="middle" ${f} font-weight="700" font-size="8" letter-spacing="4" fill="${ink}">FORM / FUNCTION</text>`;
+    case 'crest':
+      return `<g fill="none" stroke="${ink}" stroke-width="2"><path d="M${cx} ${cy-18}l23 9v20c0 18-13 29-23 35-10-6-23-17-23-35v-20z"/><path d="M${cx-11} ${cy+8}h22M${cx} ${cy-3}v23"/></g><text x="${cx}" y="${cy+62}" text-anchor="middle" ${f} font-weight="700" font-size="8" letter-spacing="4" fill="${ink}">SIDDIQIYA</text>`;
+    case 'technical':
+      return `<g fill="none" stroke="${ink}" stroke-width="2"><path d="M${cx-64} ${cy-24}h128v78h-128zM${cx-52} ${cy-12}h104v54h-104z"/><path d="M${cx-42} ${cy+12}h84M${cx} ${cy-12}v54"/></g><text x="${cx}" y="${cy+76}" text-anchor="middle" ${f} font-weight="700" font-size="8" letter-spacing="4" fill="${ink}">OBJECT / 026</text>`;
     case 'horizon':
       return `<g><circle cx="${cx}" cy="${cy + 6}" r="30" fill="${ink}" opacity=".9"/><g stroke="${ink}" stroke-width="3"><path d="M${cx - 54} ${cy + 26}h108"/><path d="M${cx - 42} ${cy + 36}h84"/><path d="M${cx - 28} ${cy + 46}h56"/></g><text x="${cx}" y="${cy + 72}" text-anchor="middle" ${f} font-weight="700" font-size="10" letter-spacing="7" fill="${ink}">HORIZON</text></g>`;
     case 'arc':

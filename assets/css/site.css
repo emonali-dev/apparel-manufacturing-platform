@@ -994,3 +994,7 @@ img.photo { object-fit: cover; }
 .hero-art img { height: auto; }
 .hero-art .hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: none; transform: none; z-index: 3; }
 .hero-art.has-photo > :not(.hero-photo) { display: none; }
+/* the "Fabric Standards" nav item is also linked from the fabric library and footer */
+@media (min-width: 1181px) and (max-width: 1380px) {
+  .nav > a[href="/premium-fabric-standard/"] { display: none; }
+}
